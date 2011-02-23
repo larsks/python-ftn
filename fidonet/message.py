@@ -3,7 +3,7 @@ import sys
 import bitstring
 
 from ftnerror import *
-from bitparser import Struct, Field, CString
+from bitparser import Struct, Field, CString, SubStructure
 
 attributeWord = Struct(
         Field('private', 'uint:1'),
@@ -14,6 +14,7 @@ attributeWord = Struct(
         Field('inTransit', 'uint:1'),
         Field('orphan', 'uint:1'),
         Field('killSent', 'uint:1'),
+        Field('local', 'uint:1'),
         Field('holdForPickup', 'uint:1'),
         Field('unused1', 'uint:1'),
         Field('fileRequest', 'uint:1'),
@@ -29,7 +30,7 @@ Message = Struct(
             Field('destNode', 'uintle:16'),
             Field('origNet', 'uintle:16'),
             Field('destNet', 'uintle:16'),
-            Field('attributeWord', 'uintle:16'),
+            SubStructure('attributeWord', attributeWord),
             Field('cost', 'uintle:16'),
             Field('dateTime', 'bytes:20'),
             CString('toUsername'),

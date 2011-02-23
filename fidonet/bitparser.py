@@ -104,3 +104,17 @@ class CString(Field):
     def copy(self):
         return CString(self.name, self.transform, self.default)
 
+class SubStructure(Field):
+    def __init__ (self, name, structure, transform=None, default=None):
+        super(SubStructure, self).__init__(name, 'substructure', transform, default)
+        self.structure = structure
+
+    def unpack(self, bits):
+        self.set(self.structure.parse(bits))
+
+    def pack(self):
+        return self._val.bits
+
+    def copy(self):
+        return SubStructure(self.name, self.structure, self.transform, self.default)
+

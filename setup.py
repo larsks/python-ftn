@@ -18,6 +18,7 @@ setup(name = "fidonet",
             'bin/ftn-scanmsg',
             'bin/ftn-scanpkt',
             'bin/ftn-unpack',
+            'bin/ftn-pack',
             ],
         install_requires = [
             'bitstring'
