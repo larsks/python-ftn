@@ -42,6 +42,9 @@ class Struct (dict):
         s = Struct(*self.fieldlist)
         return s
 
+    def write(self, fd):
+        fd.write(self.bits.bytes)
+
 class Field (object):
     def __init__ (self, name, spec, transform=None, default=0):
         self.name = name
