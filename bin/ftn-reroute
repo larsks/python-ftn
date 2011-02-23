@@ -1,0 +1,46 @@
+#!/usr/bin/python
+
+import os
+import sys
+import optparse
+
+import fidonet
+
+def parse_args():
+    p = optparse.OptionParser()
+    p.add_option('-r', '--route-to')
+    p.add_option('-o', '--output')
+    p.add_option('-i', '--in-place', action='store_true')
+    return p.parse_args()
+
+def main():
+    opts, args = parse_args()
+
+    if not opts.route_to:
+        print >>sys.stderr, 'ERROR: No route.'
+        sys.exit(1)
+
+    if not opts.output and not opts.in_place:
+        print >>sys.stderr, 'ERROR: No output file and not modifying in-place.'
+        sys.exit(1)
+
+    route = fidonet.Address(opts.route_to)
+    print 'Routing packets to:', route.ftn
+    pktfile = args.pop(0)
+
+    fd = open(pktfile)
+    pkt = fidonet.PacketFactory(fd=fd)
+    fd.close()
+
+    pkt.destZone.set(route.zone)
+    pkt.destNet.set(route.net)
+    pkt.destNode.set(route.node)
+
+    if opts.in_place:
+        pkt.write(open(pktfile, 'w'))
+    else:
+        pkt.write(open(opts.output, 'w'))
+
+if __name__ == '__main__':
+    main()
+
