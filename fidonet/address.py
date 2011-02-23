@@ -123,8 +123,12 @@ class Address (object):
 
         return '.'.join(addr)
 
+    def _hex(self):
+        return '%(net)04x%(node)04x' % self
+
     ftn = property(_ftn)
     rfc = property(_rfc)
+    hex = property(_hex)
 
     def __str__(self):
         return self.ftn()
