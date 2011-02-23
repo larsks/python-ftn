@@ -18,8 +18,13 @@ This software attempts to adhere to the following documents:
 
   This describes the type 2+ message packet.
 
+- FTS-5000.02_
+
+  This describes the format of the distribution nodelist.
+
 .. _FTS-0001.16: http://www.ftsc.org/docs/fts-0001.016
 .. _FSC-0048.02: http://www.ftsc.org/docs/fsc-0048.002
+.. _FTS-5000.02: http://www.ftsc.org/docs/fts-5000.002
 
 Message attributes
 ------------------
