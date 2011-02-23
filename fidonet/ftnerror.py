@@ -4,3 +4,6 @@ class FTNError (Exception):
 class InvalidPacket (FTNError):
     pass
 
+class InvalidMessage (FTNError):
+    pass
+

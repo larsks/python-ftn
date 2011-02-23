@@ -3,120 +3,127 @@ import sys
 import bitstring
 
 from ftnerror import *
-from bitparser import BitParser
+from bitparser import Struct, Field
 
-class fts0001 (BitParser):
-    format = (
-            ('origNode', 'uintle:16'),
-            ('destNode', 'uintle:16'),
-            ('year', 'uintle:16'),
-            ('month', 'uintle:16'),
-            ('day', 'uintle:16'),
-            ('hour', 'uintle:16'),
-            ('minute', 'uintle:16'),
-            ('second', 'uintle:16'),
-            ('baud', 'uintle:16'),
-            ('pktVersion', 'uintle:16'),
-            ('origNet', 'uintle:16'),
-            ('destNet', 'uintle:16'),
-            ('productCodeLow', 'uintle:8'),
-            ('serialNo', 'uintle:8'),
-            ('password', 'bits:64'),
-            ('qOrigZone', 'uintle:16'),
-            ('qDestZone', 'uintle:16'),
-            ('fill', 'bits:160'),
+attributeWord = Struct(
+        Field('private', 'bool'),
+        Field('crash', 'bool'),
+        Field('received', 'bool'),
+        Field('sent', 'bool'),
+        Field('fileAttached', 'bool'),
+        Field('inTransit', 'bool'),
+        Field('orphan', 'bool'),
+        Field('killSent', 'bool'),
+        Field('holdForPickup', 'bool'),
+        Field('unused1', 'bool'),
+        Field('fileRequest', 'bool'),
+        Field('returnReceiptRequested', 'bool'),
+        Field('isReturnReceipt', 'bool'),
+        Field('auditRequest', 'bool'),
+        Field('fileUpdateRequest', 'bool'),
+        )
+
+fts0001 = Struct(
+            Field('origNode', 'uintle:16'),
+            Field('destNode', 'uintle:16'),
+            Field('year', 'uintle:16'),
+            Field('month', 'uintle:16'),
+            Field('day', 'uintle:16'),
+            Field('hour', 'uintle:16'),
+            Field('minute', 'uintle:16'),
+            Field('second', 'uintle:16'),
+            Field('baud', 'uintle:16'),
+            Field('pktVersion', 'uintle:16', default=2),
+            Field('origNet', 'uintle:16'),
+            Field('destNet', 'uintle:16'),
+            Field('productCodeLow', 'uintle:8'),
+            Field('serialNo', 'uintle:8'),
+            Field('password', 'bytes:8', default='\x00' * 8),
+            Field('qOrigZone', 'uintle:16'),
+            Field('qDestZone', 'uintle:16'),
+            Field('fill', 'bytes:20'),
             )
 
-class fsc0048 (BitParser):
-    defaults = {
-            'serialNo': 0,
-            'fill': bitstring.BitString(80),
-            }
-
-    format = (
-            ('origNode', 'uintle:16'),
-            ('destNode', 'uintle:16'),
-            ('year', 'uintle:16'),
-            ('month', 'uintle:16'),
-            ('day', 'uintle:16'),
-            ('hour', 'uintle:16'),
-            ('minute', 'uintle:16'),
-            ('second', 'uintle:16'),
-            ('baud', 'uintle:16'),
-            ('pktVersion', 'uintle:16'),
-            ('origNet', 'uintle:16'),
-            ('destNet', 'uintle:16'),
-            ('productCodeLow', 'uintle:8'),
-            ('productRevMajor', 'uintle:8'),
-            ('password', 'bits:64'),
-            ('qOrigZone', 'uintle:16'),
-            ('qDestZone', 'uintle:16'),
-            ('auxNet', 'uintle:16'),
-            ('capWordValidationCopy', 'uintbe:16'),
-            ('productCodeHigh', 'uintle:8'),
-            ('productRevMinor', 'uintle:8'),
-            ('capWord', 'uintle:16'),
-            ('origZone', 'uintle:16'),
-            ('destZone', 'uintle:16'),
-            ('origPoint', 'uintle:16'),
-            ('destPoint', 'uintle:16'),
-            ('productData', 'uintle:32'),
+fsc0048 = Struct(
+            Field('origNode', 'uintle:16'),
+            Field('destNode', 'uintle:16'),
+            Field('year', 'uintle:16'),
+            Field('month', 'uintle:16'),
+            Field('day', 'uintle:16'),
+            Field('hour', 'uintle:16'),
+            Field('minute', 'uintle:16'),
+            Field('second', 'uintle:16'),
+            Field('baud', 'uintle:16'),
+            Field('pktVersion', 'uintle:16', default=2),
+            Field('origNet', 'uintle:16'),
+            Field('destNet', 'uintle:16'),
+            Field('productCodeLow', 'uintle:8'),
+            Field('productRevMajor', 'uintle:8'),
+            Field('password', 'bytes:8', default='\x00' * 8),
+            Field('qOrigZone', 'uintle:16'),
+            Field('qDestZone', 'uintle:16'),
+            Field('auxNet', 'uintle:16'),
+            Field('capWordValidationCopy', 'uintbe:16', default=1),
+            Field('productCodeHigh', 'uintle:8'),
+            Field('productRevMinor', 'uintle:8'),
+            Field('capWord', 'uintle:16', default=1),
+            Field('origZone', 'uintle:16'),
+            Field('destZone', 'uintle:16'),
+            Field('origPoint', 'uintle:16'),
+            Field('destPoint', 'uintle:16'),
+            Field('productData', 'uintle:32'),
             )
 
-class Packet (object):
-    def parse(self, bits=None, fd=None):
-        if bits is None:
-            bits = bitstring.Bits(fd)
+def PacketFactory(bits=None, fd=None):
+    if bits is None:
+        bits = bitstring.ConstBitStream(fd)
 
-        parser = fsc0048()
-        fields = parser.parse(bits)
+    pkt = fsc0048.parse(bits)
 
-        # Heuristics from FSC-0048:
-        # http://www.ftsc.org/docs/fsc-0048.002
-        if fields['pktVersion'] != 2:
-            raise InvalidPacket()
+    # Heuristics from FSC-0048:
+    # http://www.ftsc.org/docs/fsc-0048.002
+    if pkt.pktVersion.val != 2:
+        raise InvalidPacket()
 
-        if fields['capWord'] != fields['capWordValidationCopy']:
-            self.fts = 'FTS-0001 [capWord does not match]'
-            bits.pos = 0
-            fields = fts0001().parse(bits)
-        elif fields['capWord'] == 0:
-            self.fts = 'FTS-0001 [capWord is 0]'
-            bits.pos = 0
-            fields = fts0001().parse(bits)
-        elif fields['capWord'] & 0x01 == 0:
-            self.fts = 'FTS-0001 [capWord indicates no support for 2+ packets]'
-            bits.pos = 0
-            fields = fts0001().parse(bits)
-        else:
-            # This is an FSC-0048 packet.
-            self.fts = 'FSC-0048'
+    if pkt.capWord.val != pkt.capWordValidationCopy.val \
+            or pkt.capWord.val == 0 \
+            or pkt.capWord.val & 0x01 == 0:
+        bits.pos = 0
+        pkt = fts0001.parse(bits)
 
-        self.fields = fields
-        self.bits = bits
+    return pkt
 
 if __name__ == '__main__':
     from message import Message
 
-    p = Packet()
-    m = Message()
-
+    packets = []
     for f in sys.argv[1:]:
-        p.parse(fd=open(f))
-        print '%(origZone)s:%(origNet)s/%(origNode)s ->' % p.fields,
-        print '%(destZone)s:%(destNet)s/%(destNode)s' % p.fields,
-        print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % p.fields
+        bits = bitstring.ConstBitStream(open(f))
+
+        p = PacketFactory(bits)
+        packets.append(p)
+
+        print '=' * 70
+        print '%(origZone)s:%(origNet)s/%(origNode)s ->' % p,
+        print '%(destZone)s:%(destNet)s/%(destNode)s' % p,
+        print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % p
+        print '=' * 70
         print
+
         count = 0
         while True:
             try:
-                m.parse(p.bits)
+                m = Message.parse(bits)
                 print '[%03d]' % count,
-                print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % m.fields
-                print '      To: %(toUsername)s @ %(destNet)s/%(destNode)s' % m.fields
-                print '      Subject: %(subject)s' % m.fields
+                print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % m
+                print '      To: %(toUsername)s @ %(destNet)s/%(destNode)s' % m
+                print '      Subject: %(subject)s' % m
                 print '-' * 70
                 count += 1
+
+                if m.attributes.val != 0:
+                    print f
+                    break
             except bitstring.errors.ReadError:
                 break
 
