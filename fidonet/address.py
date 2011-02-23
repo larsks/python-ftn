@@ -79,6 +79,10 @@ class Address (object):
         self.ftn_domain = ftn_domain
         self.ftn5d = ftn5d
 
+        # defaults
+        self._net = 0
+        self._node = 0
+
         for k,v in kw.items():
             if k in self.fields:
                 setattr(self, k, v)
@@ -131,7 +135,7 @@ class Address (object):
     hex = property(_hex)
 
     def __str__(self):
-        return self.ftn()
+        return self.ftn
 
     def __getitem__(self, k):
         if k in self.fields:

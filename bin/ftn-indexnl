@@ -1,0 +1,39 @@
+#!/usr/bin/python
+
+import os
+import sys
+import optparse
+
+import fidonet.nodelist as nodelist
+from fidonet.nodelist import Node, Flag
+from fidonet import Address
+
+def parse_args():
+    p = optparse.OptionParser()
+    p.add_option('-o', '--output', default='nodelist.db')
+    return p.parse_args()
+
+def main():
+    opts, args = parse_args()
+    nodelist.setup('sqlite:///%s' % opts.output)
+    session = nodelist.broker()
+
+    addr = Address()
+
+    for line in open(args[0]):
+        if line.startswith(';'):
+            continue
+
+        node = Node()
+        node.from_nodelist(line, addr)
+
+        if node.node is None:
+            continue
+
+        session.add(node)
+
+    session.commit()
+
+if __name__ == '__main__':
+    main()
+
