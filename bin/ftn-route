@@ -13,6 +13,7 @@ def parse_args():
     p.add_option('-n', '--nodelist', default='nodelist.db')
     p.add_option('-N', '--noroute', action='store_true')
     p.add_option('-z', '--zone', default='1')
+    p.add_option('-I', '--internet', '--ina', action='store_true')
     return p.parse_args()
 
 def main():
