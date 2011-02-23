@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+import os
+import sys
+import optparse
+import time
+
+import bitstring
+import fidonet
+from fidonet.packet import fsc0048
+
+def parse_args():
+    p = optparse.OptionParser()
+    p.add_option('-o', '--output')
+    p.add_option('-f', '--fromaddr', '--from')
+    p.add_option('-t', '--toaddr', '--to')
+    return p.parse_args()
+
+def main():
+    opts, args = parse_args()
+
+    pkt = fsc0048.create()
+
+    toaddr = fidonet.Address(opts.toaddr)
+    fromaddr = fidonet.Address(opts.fromaddr)
+
+    pkt.origZone.val = fromaddr.zone
+    pkt.origNet.val = fromaddr.net
+    pkt.origNode.val = fromaddr.node
+
+    pkt.destZone.val = toaddr.zone
+    pkt.destNet.val = toaddr.net
+    pkt.destNode.val = toaddr.node
+
+    now = time.localtime()
+    pkt.year.val = now.tm_year
+    pkt.month.val = now.tm_mon-1
+    pkt.day.val = now.tm_mday
+    pkt.hour.val = now.tm_hour
+    pkt.minute.val = now.tm_min
+    pkt.second.val = now.tm_sec
+
+    fd = open(opts.output, 'w')
+    pkt.write(fd)
+
+    for msgfile in args:
+        m = fidonet.Message.parse_fd(open(msgfile))
+        m.write(fd)
+
+    fd.close()
+
+if __name__ == '__main__':
+    main()
+
