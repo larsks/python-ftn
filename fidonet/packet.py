@@ -42,6 +42,7 @@ fts0001 = Struct(
             Field('qOrigZone', 'uintle:16'),
             Field('qDestZone', 'uintle:16'),
             Field('fill', 'bytes:20'),
+            Field('messages', 'bits'),
             )
 
 fsc0048 = Struct(
@@ -72,6 +73,7 @@ fsc0048 = Struct(
             Field('origPoint', 'uintle:16'),
             Field('destPoint', 'uintle:16'),
             Field('productData', 'uintle:32'),
+            Field('messages', 'bits'),
             )
 
 def PacketFactory(bits=None, fd=None):
@@ -113,7 +115,7 @@ if __name__ == '__main__':
         count = 0
         while True:
             try:
-                m = Message.parse(bits)
+                m = Message.parse(p.messages.val)
                 print '[%03d]' % count,
                 print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % m
                 print '      To: %(toUsername)s @ %(destNet)s/%(destNode)s' % m
