@@ -25,14 +25,18 @@ def main():
 
     pkt = fidonet.PacketFactory(fd=open(args.pop(0)))
 
+    count = 0
     while True:
         try:
             m = fidonet.Message.parse(pkt.messages.val)
             fd = open(next_message(opts.output_dir), 'w')
             m.write(fd)
             fd.close()
+            count += 1
         except fidonet.EndOfData:
             break
+
+    print 'Unpacked %d messages into %s.' % (count, opts.output_dir)
 
 if __name__ == '__main__':
     main()
