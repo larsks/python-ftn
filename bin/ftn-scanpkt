@@ -4,7 +4,6 @@ import os
 import sys
 import optparse
 
-import bitstring
 import fidonet
 
 def parse_args():
@@ -35,7 +34,7 @@ def main():
                 print '      Subject: %(subject)s' % msg
                 print
                 count += 1
-            except bitstring.errors.ReadError:
+            except fidonet.EndOfData:
                 break
 
 if __name__ == '__main__':

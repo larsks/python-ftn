@@ -4,7 +4,6 @@ import os
 import sys
 import optparse
 
-import bitstring
 import fidonet
 
 def parse_args():
@@ -32,7 +31,7 @@ def main():
             fd = open(next_message(opts.output_dir), 'w')
             m.write(fd)
             fd.close()
-        except bitstring.errors.ReadError:
+        except fidonet.EndOfData:
             break
 
 if __name__ == '__main__':

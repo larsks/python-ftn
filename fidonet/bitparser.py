@@ -1,5 +1,7 @@
 import bitstring
 
+from ftnerror import *
+
 class Struct (dict):
     def __init__(self, *fields):
         self.fieldlist = []
@@ -23,11 +25,14 @@ class Struct (dict):
         return self.parse(bits)
 
     def parse(self, bits):
-        s = Struct(*self.fieldlist)
-        for field in self.fieldlist:
-            s[field.name].unpack(bits)
+        try:
+            s = Struct(*self.fieldlist)
+            for field in self.fieldlist:
+                s[field.name].unpack(bits)
 
-        return s
+            return s
+        except bitstring.errors.ReadError:
+            raise EndOfData
 
     def _bits(self):
         b = bitstring.BitStream()
