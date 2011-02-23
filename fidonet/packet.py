@@ -5,24 +5,6 @@ import bitstring
 from ftnerror import *
 from bitparser import Struct, Field
 
-attributeWord = Struct(
-        Field('private', 'bool'),
-        Field('crash', 'bool'),
-        Field('received', 'bool'),
-        Field('sent', 'bool'),
-        Field('fileAttached', 'bool'),
-        Field('inTransit', 'bool'),
-        Field('orphan', 'bool'),
-        Field('killSent', 'bool'),
-        Field('holdForPickup', 'bool'),
-        Field('unused1', 'bool'),
-        Field('fileRequest', 'bool'),
-        Field('returnReceiptRequested', 'bool'),
-        Field('isReturnReceipt', 'bool'),
-        Field('auditRequest', 'bool'),
-        Field('fileUpdateRequest', 'bool'),
-        )
-
 fts0001 = Struct(
             Field('origNode', 'uintle:16'),
             Field('destNode', 'uintle:16'),
@@ -98,34 +80,13 @@ def PacketFactory(bits=None, fd=None):
 if __name__ == '__main__':
     from message import Message
 
-    packets = []
-    for f in sys.argv[1:]:
-        bits = bitstring.ConstBitStream(open(f))
+    bits = bitstring.ConstBitStream(open(sys.argv[1]))
+    p = PacketFactory(bits)
 
-        p = PacketFactory(bits)
-        packets.append(p)
-
-        print '=' * 70
-        print '%(origZone)s:%(origNet)s/%(origNode)s ->' % p,
-        print '%(destZone)s:%(destNet)s/%(destNode)s' % p,
-        print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % p
-        print '=' * 70
-        print
-
-        count = 0
-        while True:
-            try:
-                m = Message.parse(p.messages.val)
-                print '[%03d]' % count,
-                print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % m
-                print '      To: %(toUsername)s @ %(destNet)s/%(destNode)s' % m
-                print '      Subject: %(subject)s' % m
-                print '-' * 70
-                count += 1
-
-                if m.attributes.val != 0:
-                    print f
-                    break
-            except bitstring.errors.ReadError:
-                break
+    print '=' * 70
+    print '%(origZone)s:%(origNet)s/%(origNode)s ->' % p,
+    print '%(destZone)s:%(destNet)s/%(destNode)s' % p,
+    print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % p
+    print '=' * 70
+    print
 
