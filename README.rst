@@ -11,8 +11,8 @@ This software attempts to adhere to the following documents:
 
 - FTS-0001.16_
 
-  This describes the original Fidonet packet format and the 
-  packed message format.
+  This describes the original Fidonet type 2 packet format and the packed
+  message format.
 
 - FSC-0048.02_
 
@@ -89,4 +89,13 @@ ready for delivery, we can run the following command::
   ftn-pack --to 1:322/759 --from 1:322/761 msgdir/*.msg
 
 This will create a file called "014202f7.out" in the current directory.
+
+ftn-msgedit
+-----------
+
+``ftn-msgedit`` edits the information in a message header::
+
+  ftn-msgedit --to 'Lars Kellogg-Stedman' --origin '1:123/500' msgdir/1.msg
+
+Note that ``ftn-msgedit`` makes changes in place.
 
