@@ -10,3 +10,6 @@ class InvalidMessage (FTNError):
 class EndOfData (FTNError):
     pass
 
+class InvalidAddress (FTNError):
+    pass
+
