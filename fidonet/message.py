@@ -61,6 +61,7 @@ class MessageBody (object):
         self.area = None
         self.origin = None
         self.klines = []
+        self.kdict = {}
         self.seenby = []
         self.body = None
         self.raw = raw
@@ -70,14 +71,17 @@ class MessageBody (object):
         else:
             self.kprefix = '\x01'
 
+        self.parseLines()
+
     def addKludge(self, line):
         k,v = line.split(None, 1)
         k = k[1:]
 
-        if self.klines.has_key(k):
-            self.klines[k].append(v)
+        if self.kdict.has_key(k):
+            self.kdict[k].append(v)
         else:
-            self.klines[k] = [v]
+            self.kdict[k] = [v]
+            self.klines.append(k)
 
     def parseLines(self):
 
