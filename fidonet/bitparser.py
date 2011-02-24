@@ -11,6 +11,16 @@ class Struct (dict):
             self.fieldlist.append(c)
 
     def __getattr__ (self, k):
+        '''This is a convenience method to allow fields to be accessed 
+        using dot notation::
+
+          >>> s = Struct(Field('name', 'bytes:4'))
+          >>> s['name']
+          <Field "name" (bytes:4)>
+          >>> s.name
+          <Field "name" (bytes:4)>
+        '''
+          
         try:
             return self[k]
         except KeyError:
@@ -75,8 +85,6 @@ class Field (object):
             self._val = self.transform(v)
         else:
             self._val = v
-
-#        print 'SET %s = %s' % (self.name, self._val)
 
     val = property(get, set)
 
