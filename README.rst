@@ -39,7 +39,7 @@ Modifying packet data
 ::
 
   pkt.destAddr = fidonet.Address('1:123/500')
-  pkt.hour = 12
+  pkt.time = time.localtime()
 
 Modifying message data
 ----------------------
@@ -54,6 +54,48 @@ Modifying message data
   body.seenby.append('1:322/761')
   
   msg.body = body
+
+Creating
+========
+
+Creating messages
+-----------------
+
+::
+
+  msg = fidonet.message.MessageParser.create()
+  msg.fromUsername = 'Lars'
+  msg.toUsername = 'Joe'
+  msg.subject = 'This is a test'
+
+  msg.origAddr = fidonet.Address('1:322/761')
+  msg.destAddr = fidonet.Address('1:322/759')
+
+  # Add a body.
+  b = msg.body
+  b.body = '''this is a test.
+  this is only a test.'''
+  b.klines['INTL'] = ['1:322/761 1:322/759']
+  msg.body = b
+
+  # Set some attributes.
+  attr = fidonet.message.attributeWordParser.create()
+  attr.private = 1
+  attr.killSent = 1
+  msg.attributeWord = attr
+
+Creating packets
+----------------
+
+::
+
+  pkt = fidonet.packet.PacketParser.create()
+  pkt.origAddr = fidonet.Address('1:322/761')
+  pkt.destAddr = fidonet.Address('1:322/759')
+  pkt.time = time.localtime()
+
+  pkt.messages.append(
+    fidonet.message.MessageParser.build(msg))
 
 Fidonet Technical Standards
 ===========================
