@@ -24,6 +24,7 @@ class App (fidonet.app.App):
     def handle_args(self, args):
 
         for pktfile in args:
+            self.log.info('Editing %s.' % pktfile)
             fd = open(pktfile, 'r+')
             pkt = fidonet.PacketFactory(fd=fd)
 
