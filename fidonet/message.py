@@ -63,7 +63,7 @@ MessageParser = Struct(
             CString('toUsername'),
             CString('fromUsername'),
             CString('subject'),
-            CString('body'),
+            CString('body', default=''),
 
             factory = Message
             )
@@ -78,14 +78,17 @@ class _MessageBodyParser (object):
     def __init__ (self, kludgePrefix='\x01'):
         self.kludgePrefix = kludgePrefix
 
-    def parse(self, raw):
-        msg = MessageBody({
+    def create(self):
+        return MessageBody({
             'area': None,
             'origin': None,
             'klines': odict.odict(),
             'seenby': [],
-            'body': [],
+            'body': '',
             })
+
+    def parse(self, raw):
+        msg = self.create()
 
         state = 0
         body = []
