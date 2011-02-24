@@ -11,6 +11,7 @@ setup(name = "fidonet",
         url = "http://github.com/larsks/fidonet",
         packages = [
             'fidonet',
+            'fidonet.apps',
             ],
         scripts = [
             'bin/ftn-msgedit',
@@ -21,7 +22,8 @@ setup(name = "fidonet",
             'bin/ftn-pack',
             ],
         install_requires = [
-            'bitstring'
+            'bitstring',
+            'sqlalchemy',
             ],
         )
 
