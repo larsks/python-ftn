@@ -1,3 +1,4 @@
+from ftnerror import *
 import re
 
 re_ftn_addr = re.compile('''
@@ -20,7 +21,8 @@ def int_property(name):
     '''Create a class property that converts all values to ints.'''
 
     def s(self, v):
-        setattr(self, '_%s' % name, int(v))
+        if v is not None:
+            setattr(self, '_%s' % name, int(v))
 
     def g(self):
         return getattr(self, '_%s' % name)
@@ -80,6 +82,7 @@ class Address (object):
         self.ftn5d = ftn5d
 
         # defaults
+        self._zone = None
         self._net = 0
         self._node = 0
 
@@ -116,8 +119,15 @@ class Address (object):
 
         return ''.join(addr)
 
+    def _msg(self):
+        return '%(net)s/%(node)s' % self
+
     def _rfc(self):
         addr = []
+
+        for field in [ 'zone', 'net', 'node']:
+            if self.get(field) is None:
+                raise InvalidAddress()
 
         if self.get('point') is not None:
             addr.append('p%(point)s' % self)
@@ -133,6 +143,7 @@ class Address (object):
     ftn = property(_ftn)
     rfc = property(_rfc)
     hex = property(_hex)
+    msg = property(_msg)
 
     def __str__(self):
         return self.ftn
