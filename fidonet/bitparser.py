@@ -28,8 +28,11 @@ class Struct (object):
     def parse(self, bits):
         data = self.__factory()
 
-        for f in self.__fieldlist:
-            data[f.name] = f.unpack(bits)
+        try:
+            for f in self.__fieldlist:
+                data[f.name] = f.unpack(bits)
+        except bitstring.errors.ReadError:
+            raise EndOfData()
 
         return data
 
