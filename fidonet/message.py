@@ -151,9 +151,9 @@ class _MessageBodyParser (dict):
 MessageBodyParser = _MessageBodyParser()
 
 def MessageFactory(bits=None, fd=None):
-    if bits:
+    if bits is not None:
         return MessageParser.parse(bits)
-    elif fd:
+    elif fd is not None:
         return MessageParser.parse_fd(fd)
 
 if __name__ == '__main__':

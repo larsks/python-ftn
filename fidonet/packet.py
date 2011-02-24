@@ -7,6 +7,11 @@ from util import *
 from bitparser import Struct, Field, Container
 from address import Address
 
+class Packet (Container):
+
+    origAddr = ftn_address_property('orig')
+    destAddr = ftn_address_property('dest')
+
 fts0001 = Struct(
             Field('origNode', 'uintle:16'),
             Field('destNode', 'uintle:16'),
@@ -63,11 +68,6 @@ fsc0048 = Struct(
 
             factory = Packet
             )
-
-class Packet (Container):
-
-    origAddr = ftn_address_property('orig')
-    destAddr = ftn_address_property('dest')
 
 def PacketFactory(bits=None, fd=None):
     if bits is None:

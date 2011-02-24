@@ -31,14 +31,14 @@ class App (fidonet.app.App):
                 count = 0
                 while True:
                     try:
-                        msg = fidonet.Message.parse(pkt.messages.val)
+                        msg = fidonet.MessageFactory(pkt.messages)
                         print '[%03d]' % count,
                         print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % msg
                         print '      To: %(toUsername)s @ %(destNet)s/%(destNode)s' % msg
                         print '      Subject: %(subject)s' % msg
                         print '      Flags:',
-                        for k,v in msg.attributeWord.val.items():
-                            if v.val:
+                        for k,v in msg.attributeWord.items():
+                            if v:
                                 print k.upper(),
                         print
                         print

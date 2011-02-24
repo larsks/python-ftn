@@ -5,6 +5,6 @@ import address
 from ftnerror import *
 
 Address = address.Address
-Message = message.Message
+MessageFactory = message.MessageFactory
 PacketFactory = packet.PacketFactory
 
