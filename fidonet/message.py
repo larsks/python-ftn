@@ -1,6 +1,7 @@
 import os
 import sys
 import bitstring
+from StringIO import StringIO
 
 from ftnerror import *
 from bitparser import Struct, Field, CString
@@ -54,6 +55,64 @@ class Message (dict):
         return attributeWord.parse(self['attributeWord'])
 
     attributeWord = property(_getAW, _setAW)
+
+class MessageBody (object):
+    def __init__ (self, raw, kludgePrefix=None):
+        self.area = None
+        self.origin = None
+        self.klines = []
+        self.seenby = []
+        self.body = None
+        self.raw = raw
+
+        if kludgePrefix is not None:
+            self.kprefix = kludgePrefix
+        else:
+            self.kprefix = '\x01'
+
+    def addKludge(self, line):
+        k,v = line.split(None, 1)
+        k = k[1:]
+
+        if self.klines.has_key(k):
+            self.klines[k].append(v)
+        else:
+            self.klines[k] = [v]
+
+    def parseLines(self):
+
+        state = 0
+        body = []
+
+        for line in self.raw.split('\r'):
+            print 'STATE:', state
+            if state == 0:
+                state = 1
+
+                if line.startswith('AREA:'):
+                    self.area = line.split(':', 1)[1]
+            elif state == 1:
+                if line.startswith('\x01'):
+                    self.addKludge(line)
+                elif line.startswith(' * Origin:'):
+                    self.origin = line
+                    state = 2
+                else:
+                    body.append(line)
+            elif state == 2:
+                if line.startswith('\x01'):
+                    self.addKludge(line)
+                elif line.startswith('SEEN-BY:'):
+                    self.seenby.append(line)
+                elif len(line) == 0:
+                    pass
+                else:
+                    raise ValueError('Unexpected: %s'    % line)
+
+        self.body = '\r\n'.join(body)
+
+    def __str__ (self):
+        return '\n'.join(self.lines)
 
 def MessageFactory(bits=None, fd=None):
     if bits is None:
