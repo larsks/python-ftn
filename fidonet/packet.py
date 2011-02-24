@@ -4,6 +4,7 @@ import bitstring
 
 from ftnerror import *
 from bitparser import Struct, Field
+from address import Address
 
 fts0001 = Struct(
             Field('origNode', 'uintle:16'),
@@ -58,30 +59,52 @@ fsc0048 = Struct(
             Field('messages', 'bits'),
             )
 
+def ftn_address_property(name):
+    def _get(self):
+        return Address(
+                zone = self['%sZone' % name],
+                net = self['%sNet' % name],
+                node = self['%sNode' % name])
+
+    def _set(self, addr):
+        self['%sZone' % name] = addr.zone
+        self['%sNet' % name] = addr.net
+        self['%sNode' % name] = addr.node
+
+    return property(_get, _set)
+
+class Packet (dict):
+
+    origAddr = ftn_address_property('orig')
+    destAddr = ftn_address_property('dest')
+
+    def __getattr__ (self, k):
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(k)
+
 def PacketFactory(bits=None, fd=None):
     if bits is None:
         bits = bitstring.ConstBitStream(fd)
 
-    pkt = fsc0048.parse(bits)
+    pkt = fsc0048.parse(bits, Packet)
 
     # Heuristics from FSC-0048:
     # http://www.ftsc.org/docs/fsc-0048.002
-    if pkt.pktVersion.val != 2:
+    if pkt.pktVersion != 2:
         raise InvalidPacket()
 
-    if pkt.capWord.val != pkt.capWordValidationCopy.val \
-            or pkt.capWord.val == 0 \
-            or pkt.capWord.val & 0x01 == 0:
+    if pkt.capWord != pkt.capWordValidationCopy \
+            or pkt.capWord == 0 \
+            or pkt.capWord & 0x01 == 0:
         bits.pos = 0
-        pkt = fts0001.parse(bits)
+        pkt = fts0001.parse(bits, Packet)
 
     return pkt
 
 if __name__ == '__main__':
-    from message import Message
-
-    bits = bitstring.ConstBitStream(open(sys.argv[1]))
-    p = PacketFactory(bits)
+    p = PacketFactory(fd=open(sys.argv[1]))
 
     print '=' * 70
     print '%(origZone)s:%(origNet)s/%(origNode)s ->' % p,

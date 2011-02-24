@@ -2,101 +2,55 @@ import bitstring
 
 from ftnerror import *
 
-class Struct (dict):
-    def __init__(self, *fields):
-        self.fieldlist = []
-        for field in fields:
-            c = field.copy()
-            self[field.name] = c
-            self.fieldlist.append(c)
+class Struct (object):
 
-    def __getattr__ (self, k):
-        '''This is a convenience method to allow fields to be accessed 
-        using dot notation::
+    def __init__ (self, *fields, **kw):
+        self.__fields = {}
+        self.__fieldlist = []
 
-          >>> s = Struct(Field('name', 'bytes:4'))
-          >>> s['name']
-          <Field "name" (bytes:4)>
-          >>> s.name
-          <Field "name" (bytes:4)>
-        '''
-          
-        try:
-            return self[k]
-        except KeyError:
-            raise AttributeError(k)
+        for f in fields:
+            self.__fieldlist.append(f)
+            self.__fields[f.name] = f
 
-    def parse_fd(self, fd):
-        bits = bitstring.ConstBitStream(fd)
-        return self.parse(bits)
+    def parse(self, bits, factory=dict):
+        data = factory()
 
-    def parse_string(self, s):
-        bits = bitstring.ConstBitStream(bytes=s)
-        return self.parse(bits)
+        for f in self.__fieldlist:
+            data[f.name] = f.unpack(bits)
 
-    def parse(self, bits):
-        try:
-            s = Struct(*self.fieldlist)
-            for field in self.fieldlist:
-                s[field.name].unpack(bits)
+        return data
 
-            return s
-        except bitstring.errors.ReadError:
-            raise EndOfData
+    def build(self, data):
+        bitlist = bitstring.BitStream()
 
-    def _bits(self):
-        b = bitstring.BitStream()
-        for field in self.fieldlist:
-            b.append(field.pack())
+        for f in self.__fieldlist:
+            bitlist.append(f.pack(data[f.name]))
 
-        return b
+        return bitlist
 
-    bits = property(_bits)
-
-    def create(self):
-        s = Struct(*self.fieldlist)
-        return s
-
-    def write(self, fd):
-        fd.write(self.bits.bytes)
+    def write(self, data, fd):
+        fd.write(self.build(data).bytes)
 
 class Field (object):
-    def __init__ (self, name, spec, transform=None, default=0):
+    def __init__ (self, name, spec=None, transform=None, default=0):
         self.name = name
         self.spec = spec
         self.transform = transform
         self.default = default
-        self._val = default
 
     def __repr__ (self):
         return '<Field "%s" (%s)>' % (self.name, self.spec)
 
-    def __str__ (self):
-        return str(self._val)
-
-    def copy(self):
-        return Field(self.name, self.spec, self.transform, self.default)
-
-    def get(self):
-        return self._val
-
-    def set(self, v):
-        if callable(self.transform):
-            self._val = self.transform(v)
-        else:
-            self._val = v
-
-    val = property(get, set)
-
     def unpack(self, bits):
-        self.set(bits.read(self.spec))
+        return bits.read(self.spec)
 
-    def pack(self):
-        return bitstring.pack(self.spec, self._val)
+    def pack(self, val):
+        return bitstring.pack(self.spec, val)
 
 class CString(Field):
-    def __init__ (self, name, transform=None, default=None):
-        super(CString, self).__init__(name, 'cstring', transform, default)
+    def __init__ (self, *args, **kwargs):
+        super(CString, self).__init__(*args, **kwargs)
+        self.spec = 'bytes, 0x00'
 
     def unpack(self, bits):
         cur = bits.pos
@@ -104,25 +58,5 @@ class CString(Field):
         v = bits[cur:cur+nul].tobytes()
         bits.pos = cur + nul + 8
 
-        self.set(v)
-
-    def pack(self):
-        return bitstring.pack('bytes, 0x00', self._val)
-
-    def copy(self):
-        return CString(self.name, self.transform, self.default)
-
-class SubStructure(Field):
-    def __init__ (self, name, structure, transform=None, default=None):
-        super(SubStructure, self).__init__(name, 'substructure', transform, default)
-        self.structure = structure
-
-    def unpack(self, bits):
-        self.set(self.structure.parse(bits))
-
-    def pack(self):
-        return self._val.bits
-
-    def copy(self):
-        return SubStructure(self.name, self.structure, self.transform, self.default)
+        return v
 
