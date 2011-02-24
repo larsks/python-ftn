@@ -56,7 +56,7 @@ class Struct (object):
     def build(self, data):
         bitlist = bitstring.BitStream()
 
-        if callable(self.__validate):
+        if hasattr(self, '__validate'):
             self.__validate(data)
 
         for f in self.__fieldlist:
@@ -66,6 +66,14 @@ class Struct (object):
 
     def write(self, data, fd):
         fd.write(self.build(data).bytes)
+
+    def create(self):
+        d = self.__factory()
+
+        for f in self.__fieldlist:
+            d[f.name] = f.default
+
+        return d
 
 class Field (object):
     def __init__ (self, name, spec=None, transform=None, default=0):

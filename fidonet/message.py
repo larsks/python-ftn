@@ -50,14 +50,16 @@ class Message (Container):
     destAddr = ftn_address_property('dest')
 
 MessageParser = Struct(
-            Field('msgVersion', 'uintle:16'),
+            Field('msgVersion', 'uintle:16', default=2),
             Field('origNode', 'uintle:16'),
             Field('destNode', 'uintle:16'),
             Field('origNet', 'uintle:16'),
             Field('destNet', 'uintle:16'),
-            Field('attributeWord', 'bits:16'),
+            Field('attributeWord', 'bits:16',
+                default=bitstring.BitStream(16)),
             Field('cost', 'uintle:16'),
-            Field('dateTime', 'bytes:20'),
+            Field('dateTime', 'bytes:20',
+                default=' '*20),
             CString('toUsername'),
             CString('fromUsername'),
             CString('subject'),
