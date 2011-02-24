@@ -1,47 +1,5 @@
 #!/usr/bin/python
 
-import os
-import sys
-import optparse
-
-import bitstring
-import fidonet
-
-def parse_args():
-    p = optparse.OptionParser()
-    p.add_option('-t', '--toname', '--to')
-    p.add_option('-f', '--fromname', '--from')
-    p.add_option('-o', '--origin')
-    p.add_option('-d', '--destination', '--dest')
-    p.add_option('-s', '--subject')
-    return p.parse_args()
-
-def main():
-    opts, args = parse_args()
-
-    fd = open(args.pop(0), 'r+')
-    msg = fidonet.Message.parse_fd(fd)
-
-    if opts.toname:
-        msg.toUsername.val = opts.toname
-    if opts.fromname:
-        msg.fromUsername.val = opts.fromname
-    if opts.origin:
-        addr = fidonet.Address(opts.origin)
-        msg.origNet.val = addr.net
-        msg.origNode.val = addr.node
-    if opts.destination:
-        addr = fidonet.Address(opts.destination)
-        msg.destNet.val = addr.net
-        msg.destNode.val = addr.node
-    if opts.subject:
-        msg.subject.val = opts.subject
-
-    fd.seek(0)
-    msg.write(fd)
-    fd.close()
-
-
-if __name__ == '__main__':
-    main()
+import fidonet.apps.msgedit
+fidonet.apps.msgedit.App.run()
 

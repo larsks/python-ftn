@@ -10,6 +10,12 @@ class Container(dict):
         except KeyError:
             raise AttributeError(k)
 
+    def __setattr__ (self, k,v):
+        if k in self:
+            self[k] = v
+        else:
+            super(Container, self).__setattr__(k, v)
+
 class Struct (object):
 
     def __init__ (self, *fields, **kw):

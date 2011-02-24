@@ -1,35 +1,5 @@
 #!/usr/bin/python
 
-import os
-import sys
-import optparse
-
-import bitstring
-import fidonet
-
-def parse_args():
-    p = optparse.OptionParser()
-    p.add_option('-b', '--show-body', action='store_true')
-    return p.parse_args()
-
-def main():
-    opts, args = parse_args()
-
-    msg = fidonet.Message.parse_fd(open(args.pop(0)))
-
-    print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % msg
-    print 'To: %(toUsername)s @ %(destNet)s/%(destNode)s' % msg
-    print 'Subject: %(subject)s' % msg
-    print 'Flags:',
-    for k,v in msg.attributeWord.val.items():
-        if v.val:
-            print k.upper(),
-    print
-    print
-
-    if opts.show_body:
-        print msg.body.val
-
-if __name__ == '__main__':
-    main()
+import fidonet.apps.scanmsg
+fidonet.apps.scanmsg.App.run()
 
