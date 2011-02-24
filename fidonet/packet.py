@@ -3,7 +3,8 @@ import sys
 import bitstring
 
 from ftnerror import *
-from bitparser import Struct, Field
+from util import *
+from bitparser import Struct, Field, Container
 from address import Address
 
 fts0001 = Struct(
@@ -26,6 +27,8 @@ fts0001 = Struct(
             Field('qDestZone', 'uintle:16'),
             Field('fill', 'bytes:20'),
             Field('messages', 'bits'),
+
+            factory=Packet
             )
 
 fsc0048 = Struct(
@@ -57,38 +60,20 @@ fsc0048 = Struct(
             Field('destPoint', 'uintle:16'),
             Field('productData', 'uintle:32'),
             Field('messages', 'bits'),
+
+            factory = Packet
             )
 
-def ftn_address_property(name):
-    def _get(self):
-        return Address(
-                zone = self['%sZone' % name],
-                net = self['%sNet' % name],
-                node = self['%sNode' % name])
-
-    def _set(self, addr):
-        self['%sZone' % name] = addr.zone
-        self['%sNet' % name] = addr.net
-        self['%sNode' % name] = addr.node
-
-    return property(_get, _set)
-
-class Packet (dict):
+class Packet (Container):
 
     origAddr = ftn_address_property('orig')
     destAddr = ftn_address_property('dest')
-
-    def __getattr__ (self, k):
-        try:
-            return self[k]
-        except KeyError:
-            raise AttributeError(k)
 
 def PacketFactory(bits=None, fd=None):
     if bits is None:
         bits = bitstring.ConstBitStream(fd)
 
-    pkt = fsc0048.parse(bits, Packet)
+    pkt = fsc0048.parse(bits)
 
     # Heuristics from FSC-0048:
     # http://www.ftsc.org/docs/fsc-0048.002
@@ -99,7 +84,7 @@ def PacketFactory(bits=None, fd=None):
             or pkt.capWord == 0 \
             or pkt.capWord & 0x01 == 0:
         bits.pos = 0
-        pkt = fts0001.parse(bits, Packet)
+        pkt = fts0001.parse(bits)
 
     return pkt
 

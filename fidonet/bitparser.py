@@ -2,23 +2,44 @@ import bitstring
 
 from ftnerror import *
 
+class Container(dict):
+
+    def __getattr__ (self, k):
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(k)
+
 class Struct (object):
 
     def __init__ (self, *fields, **kw):
         self.__fields = {}
         self.__fieldlist = []
 
+        if 'factory' in kw:
+            self.__factory = kw['factory']
+        else:
+            self.__factory = Container
+
         for f in fields:
             self.__fieldlist.append(f)
             self.__fields[f.name] = f
 
-    def parse(self, bits, factory=dict):
-        data = factory()
+    def parse(self, bits):
+        data = self.__factory()
 
         for f in self.__fieldlist:
             data[f.name] = f.unpack(bits)
 
         return data
+
+    def parse_fd(self, fd):
+        bits = bitstring.ConstBitStream(fd)
+        return self.parse(bits)
+
+    def parse_bytes(self, bytes):
+        bits = bitstring.ConstBitStream(bytes=bytes)
+        return self.parse(bits)
 
     def build(self, data):
         bitlist = bitstring.BitStream()
