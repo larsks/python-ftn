@@ -74,7 +74,10 @@ class Struct (object):
         d = self.__factory()
 
         for f in self.__fieldlist:
-            d[f.name] = f.default
+            if callable(f.default):
+                d[f.name] = f.default()
+            else:
+                d[f.name] = f.default
 
         return d
 
