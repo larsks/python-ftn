@@ -1,43 +1,5 @@
 #!/usr/bin/python
 
-import os
-import sys
-import optparse
-
-import fidonet
-
-def parse_args():
-    p = optparse.OptionParser()
-    p.add_option('-o', '--output_dir', default='.')
-    return p.parse_args()
-
-def next_message(dir, start=1):
-    count=start
-    while True:
-        msgpath = os.path.join(dir, '%d.msg' % count)
-        if not os.path.exists(msgpath):
-            return msgpath
-
-        count += 1
-
-def main():
-    opts, args = parse_args()
-
-    pkt = fidonet.PacketFactory(fd=open(args.pop(0)))
-
-    count = 0
-    while True:
-        try:
-            m = fidonet.Message.parse(pkt.messages.val)
-            fd = open(next_message(opts.output_dir), 'w')
-            m.write(fd)
-            fd.close()
-            count += 1
-        except fidonet.EndOfData:
-            break
-
-    print 'Unpacked %d messages into %s.' % (count, opts.output_dir)
-
-if __name__ == '__main__':
-    main()
+import fidonet.apps.unpack
+fidonet.apps.unpack.App.run()
 

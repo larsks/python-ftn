@@ -33,7 +33,7 @@ class App (fidonet.app.App):
                     import pprint
                     pprint.pprint(msg.body)
                 else:
-                    print msg.body.body
+                    print msg.body.render()
 
 if __name__ == '__main__':
     App.run()

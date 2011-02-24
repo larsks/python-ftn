@@ -7,6 +7,8 @@ from ftnerror import *
 from util import *
 from bitparser import Struct, Field, CString, Container
 
+import odict
+
 attributeWordParser = Struct(
         Field('private', 'uint:1'),
         Field('crash', 'uint:1'),
@@ -64,15 +66,21 @@ MessageParser = Struct(
             factory = Message
             )
 
-class _MessageBodyParser (dict):
+class MessageBody (Container):
+    def render(self):
+        return MessageBodyParser.build(self)\
+                .replace('\r', '\n')\
+                .replace('\x01', '[K]')
+
+class _MessageBodyParser (object):
     def __init__ (self, kludgePrefix='\x01'):
         self.kludgePrefix = kludgePrefix
 
     def parse(self, raw):
-        msg = Container({
+        msg = MessageBody({
             'area': None,
             'origin': None,
-            'klines': ([], {}),
+            'klines': odict.odict(),
             'seenby': [],
             'body': [],
             })
@@ -108,42 +116,33 @@ class _MessageBodyParser (dict):
 
         return msg
 
-    def build(self, parsed):
-        '''Rebuilds the message as:
+    def build(self, msg):
+        lines = []
 
-                AREA:...
-                Kludge lines
-                Body
-                Origin
-                SEEN-BY'''
+        if msg['area']:
+            lines.append('AREA:%(area)s' % msg)
 
-        msg = []
+        for k,vv in msg['klines'].items():
+            for v in vv:
+                lines.append('%s%s %s' % (self.kludgePrefix, k,v))
 
-        if parsed['area']:
-            msg.append('AREA:%(area)s' % parsed)
+        lines.extend(msg['body'].split('\n'))
 
-        for k in parsed['klines'][0]:
-            for v in parsed['klines'][1][k]:
-                msg.append('%s%s %s' % (self.kludgePrefix, k,v))
+        if msg['origin']:
+            lines.append(msg['origin'])
 
-        msg.extend(parsed['body'].split('\n'))
+        for seenby in msg['seenby']:
+            lines.append('SEEN-BY: %s' % seenby)
 
-        if parsed['origin']:
-            msg.append(parsed['origin'])
-
-        for seenby in parsed['seenby']:
-            msg.append('SEEN-BY: %s' % seenby)
-
-        return '\r'.join(msg)
+        return '\r'.join(lines)
 
     def addKludge(self, msg, line):
         k,v = line[1:].split(None, 1)
 
-        if k in msg['klines'][0]:
-            msg['klines'][1][k].append(v)
+        if k in msg['klines']:
+            msg['klines'][k].append(v)
         else:
-            msg['klines'][0].append(k)
-            msg['klines'][1][k] = [v]
+            msg['klines'][k] = [v]
 
     def __str__ (self):
         return '\n'.join(self.lines)

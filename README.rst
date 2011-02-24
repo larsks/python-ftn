@@ -4,6 +4,57 @@ FTN Tools for Python
 
 .. contents::
 
+Parsing
+=======
+
+Parsing packets
+---------------
+
+::
+
+  pkt = fidonet.PacketFactory(fd=open('05E89CD6.PKT'))
+
+  print 'FROM:', pkt.origAddr
+  print '  TO:', pkt.destAddr
+
+Parsing messages in a packet
+----------------------------
+
+::
+
+  while True:
+    try:
+      msg = fidonet.MessageFactory(pkt.messages)
+      print 'FROM: %s @ %s' % (msg.fromUsername, msg.origAddr)
+      print '  TO: %s @ %s' % (msg.toUsername, msg.destAddr)
+    except ftn.EndOfData:
+      break
+
+Modifying
+=========
+
+Modifying packet data
+---------------------
+ 
+::
+
+  pkt.destAddr = fidonet.Address('1:123/500')
+  pkt.hour = 12
+
+Modifying message data
+----------------------
+
+::
+
+  msg.toUsername = 'Joe User'
+  msg.destAddr = fidonet.Address('1:123/500')
+
+  body = msg.body
+  body.origin = ' * The Odd Bit (1:322/761)'
+  body.seenby.append('1:322/761')
+  
+  msg.body = body
+
 Fidonet Technical Standards
 ===========================
 

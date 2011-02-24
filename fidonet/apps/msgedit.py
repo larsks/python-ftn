@@ -47,12 +47,10 @@ class App (fidonet.app.App):
             if self.opts.debug:
                 import pprint
                 pprint.pprint(msg)
-                pprint.pprint(dir(msg))
 
             fd.seek(0)
             fidonet.message.MessageParser.write(msg, fd)
             fd.close()
-
 
 if __name__ == '__main__':
     App.run()
