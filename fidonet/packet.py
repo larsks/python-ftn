@@ -56,7 +56,7 @@ fts0001 = Struct(
             Field('origZone', 'uintle:16'),
             Field('destZone', 'uintle:16'),
             Field('fill', 'bytes:20'),
-            Field('messages', 'bits'),
+            Field('messages', 'bits', default=bitstring.BitStream),
 
             factory=Packet,
             validate=fixup_packet,
@@ -90,7 +90,7 @@ fsc0048 = Struct(
             Field('origPoint', 'uintle:16'),
             Field('destPoint', 'uintle:16'),
             Field('productData', 'uintle:32'),
-            Field('messages', 'bits'),
+            Field('messages', 'bits', default=bitstring.BitStream),
 
             factory = Packet,
             validate=fixup_packet,
