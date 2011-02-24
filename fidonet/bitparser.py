@@ -27,6 +27,9 @@ class Struct (object):
         else:
             self.__factory = Container
 
+        if 'validate' in kw:
+            self.__validate = kw['validate']
+
         for f in fields:
             self.__fieldlist.append(f)
             self.__fields[f.name] = f
@@ -52,6 +55,9 @@ class Struct (object):
 
     def build(self, data):
         bitlist = bitstring.BitStream()
+
+        if callable(self.__validate):
+            self.__validate(data)
 
         for f in self.__fieldlist:
             bitlist.append(f.pack(data[f.name]))
