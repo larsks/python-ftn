@@ -97,6 +97,25 @@ Creating packets
   pkt.messages.append(
     fidonet.message.MessageParser.build(msg))
 
+Writing
+=======
+
+Writing messages
+----------------
+
+::
+
+  fd = open('1.msg', 'w')
+  fidonet.message.MessageParser.write(msg, fd)
+
+Writing packets
+---------------
+
+::
+
+  fd = open('1.msg', 'w')
+  fidonet.message.PacketParser.write(pkt, fd)
+
 Fidonet Technical Standards
 ===========================
 
