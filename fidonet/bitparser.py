@@ -11,7 +11,10 @@ class Container(dict):
             raise AttributeError(k)
 
     def __setattr__ (self, k,v):
-        if k in self:
+        if hasattr(self.__class__, k) and \
+                hasattr(getattr(self.__class__, k), '__set__'):
+            super(Container, self).__setattr__(k, v)
+        elif k in self:
             self[k] = v
         else:
             super(Container, self).__setattr__(k, v)
