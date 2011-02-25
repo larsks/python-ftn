@@ -7,6 +7,8 @@ import fidonet
 import fidonet.app
 
 class App (fidonet.app.App):
+    logtag = 'fidonet.scanpkt'
+
     def create_parser(self):
         p = super(App, self).create_parser()
         p.add_option('-m', '--show-messages', action='store_true')

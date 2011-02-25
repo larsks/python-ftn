@@ -8,6 +8,8 @@ import fidonet.app
 import fidonet.nodelist
 
 class App(fidonet.app.App):
+    logtag = 'fidonet.indexnl'
+
     def create_parser(self):
         p = super(App, self).create_parser()
         p.add_option('-o', '--output')

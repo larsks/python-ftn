@@ -9,6 +9,8 @@ import fidonet.app
 import fidonet.message
 
 class App (fidonet.app.App):
+    logtag = 'fidonet.editmsg'
+
     def create_parser(self):
         p = super(App, self).create_parser()
 

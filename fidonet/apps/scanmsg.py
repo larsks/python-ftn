@@ -8,6 +8,8 @@ import fidonet.app
 import fidonet.message
 
 class App (fidonet.app.App):
+    logtag = 'fidonet.scanmsg'
+
     def create_parser(self):
         p = super(App, self).create_parser()
         p.add_option('-b', '--show-body', action='store_true')

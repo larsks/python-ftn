@@ -7,6 +7,8 @@ from fidonet.message import MessageParser
 from fidonet.address import Address
 
 class App (fidonet.app.App):
+    logtag = 'fidonet.makemsg'
+
     def create_parser(self):
         p = super(App, self).create_parser()
 

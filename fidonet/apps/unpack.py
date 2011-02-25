@@ -14,6 +14,8 @@ def next_message(dir, start=1):
         count += 1
 
 class App(fidonet.app.App):
+    logtag = 'fidonet.unpack'
+
     def create_parser(self):
         p = super(App, self).create_parser()
         p.add_option('-d', '--output-directory')
