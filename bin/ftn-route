@@ -1,45 +1,5 @@
 #!/usr/bin/python
 
-import os
-import sys
-import optparse
-
-import fidonet
-import fidonet.nodelist as nodelist
-from fidonet.nodelist import Node
-
-def parse_args():
-    p = optparse.OptionParser()
-    p.add_option('-n', '--nodelist', default='nodelist.db')
-    p.add_option('-N', '--noroute', action='store_true')
-    p.add_option('-z', '--zone', default='1')
-    p.add_option('-I', '--internet', '--ina', action='store_true')
-    return p.parse_args()
-
-def main():
-    opts, args = parse_args()
-    nodelist.setup('sqlite:///%s' % opts.nodelist)
-    session = nodelist.broker()
-
-    for addr in args:
-        dst = fidonet.Address(addr)
-        print 'Finding route to', dst.ftn
-
-        node = session.query(Node).filter(Node.address==dst.ftn).first()
-        hub = session.query(Node).filter(Node.net==dst.net).filter(Node.kw=='Hub').first()
-        host = session.query(Node).filter(Node.net==dst.net).filter(Node.node==0).first()
-
-        if hub is None and host is None:
-            print dst.ftn, 'DIRECT'
-        elif hub and (not opts.noroute or node and node.kw in ['Pvt', 'Hold']):
-            print dst.ftn, 'HUB', fidonet.Address(hub.address).ftn
-        elif host and (not opts.noroute or node and node.kw in ['Pvt', 'Hold']):
-            print dst.ftn, 'HOST', fidonet.Address(host.address).ftn
-        elif not node:
-            print dst.ftn, 'ORPHAN'
-        else:
-            print dst.ftn, 'DIRECT'
-
-if __name__ == '__main__':
-    main()
+import fidonet.apps.route
+fidonet.apps.route.App.run()
 
