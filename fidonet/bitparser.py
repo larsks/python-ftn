@@ -9,12 +9,14 @@ class Container(dict):
         self.__struct__ = struct
 
     def __getattr__ (self, k):
+        '''Allow keys to be accessed using dot notation.'''
         try:
             return self[k]
         except KeyError:
             raise AttributeError(k)
 
     def __setattr__ (self, k,v):
+        '''Allow keys to be set using dot notation.'''
         if hasattr(self.__class__, k) and \
                 hasattr(getattr(self.__class__, k), '__set__'):
             super(Container, self).__setattr__(k, v)
@@ -22,6 +24,17 @@ class Container(dict):
             self[k] = v
         else:
             super(Container, self).__setattr__(k, v)
+
+    def __getitem__ (self, k):
+        '''Make properties accessible as keys.'''
+        try:
+            return super(Container, self).__getitem__(k)
+        except KeyError:
+            if hasattr(self.__class__, k) and \
+                    isinstance(getattr(self.__class__, k), property):
+                return getattr(self, k)
+            else:
+                raise
 
     def build(self):
         return self.__struct__.build(self)
