@@ -25,6 +25,8 @@ class Container(dict):
 
     def build(self):
         return self.__struct__.build(self)
+    def write(self, fd):
+        return self.__struct__.write(self, fd)
 
 class Struct (object):
 
@@ -152,6 +154,6 @@ class PaddedString(Field):
         return v
 
     def pack(self, val):
-        val = val + self.padchar * self.length [:self.length]
+        val = (val + self.padchar * self.length) [:self.length]
         return super(PaddedString, self).pack(val)
  

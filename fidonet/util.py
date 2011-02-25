@@ -1,3 +1,4 @@
+import logging
 from address import Address
 
 def ftn_address_property(name):

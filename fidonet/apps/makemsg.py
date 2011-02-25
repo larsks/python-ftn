@@ -2,9 +2,9 @@
 
 import sys
 
+from fidonet import Address
+from fidonet.formats import *
 import fidonet.app
-from fidonet.message import MessageParser
-from fidonet.address import Address
 
 class App (fidonet.app.App):
     logtag = 'fidonet.makemsg'
@@ -19,23 +19,38 @@ class App (fidonet.app.App):
         p.add_option('-o', '--origin', '--orig')
         p.add_option('-d', '--destination', '--dest')
         p.add_option('--output', '--out')
+        p.add_option('--disk', action='store_false',
+                dest='packed')
+        p.add_option('--packed', action='store_true',
+                dest='packed')
+
+        p.set_default('packed', True)
 
         return p
 
     def handle_args (self, args):
-        msg = fidonet.message.MessageParser.create()
+        if self.opts.packed:
+            msg = packedmessage.MessageParser.create()
+        else:
+            msg = diskmessage.MessageParser.create()
 
         if self.opts.fromuser:
             msg.fromUsername = self.opts.fromuser
+            self.log.debug('set fromUsername = %s' % msg.fromUsername)
         if self.opts.touser:
             msg.toUsername = self.opts.touser
+            self.log.debug('set toUsername = %s' % msg.toUsername)
         if self.opts.subject:
             msg.subject = self.opts.subject
+            self.log.debug('set subject = %s' % msg.subject)
 
         if self.opts.origin:
-            msg.originAddr = Address(self.opts.origin)
+            foo = Address(self.opts.origin)
+            msg.origAddr = Address(self.opts.origin)
+            self.log.debug('set originAddr = %s' % msg.origAddr)
         if self.opts.destination:
             msg.destAddr = Address(self.opts.destination)
+            self.log.debug('set destinAddr = %s' % msg.destAddr)
 
         body = msg.body
 
@@ -51,7 +66,7 @@ class App (fidonet.app.App):
         body.body = sys.stdin.read()
         msg.body = body
 
-        MessageParser.write(msg, sys.stdout)
+        msg.write(sys.stdout)
 
 if __name__ == '__main__':
     App.run()
