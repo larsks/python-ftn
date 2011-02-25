@@ -27,6 +27,7 @@ class App (object):
         self.setup_logging()
         self.setup_umask()
 
+        self.log.debug('reading config from %s' % self.opts.config)
         self.log.debug('finished generic setup')
 
         if self.opts.dump_config:
@@ -45,8 +46,8 @@ class App (object):
         p = optparse.OptionParser()
 
         p.add_option('-F', '--config',
-                default=os.path.join(
-                    os.environ.get('FTN_CONFIG_DIR', '.'), 'fidonet.cfg'),
+                default=os.environ.get('FTN_CONFIG_FILE', os.path.join(
+                    os.environ.get('FTN_CONFIG_DIR', '.'), 'fidonet.cfg')),
                 help='Path to main configuration file')
         p.add_option('-V', '--verbose',
                 action='store_true',
