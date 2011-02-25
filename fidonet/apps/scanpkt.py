@@ -19,7 +19,7 @@ class App (fidonet.app.App):
     def handle_args(self, args):
 
         for pktfile in args:
-            pkt = fidonet.PacketFactory(fd=open(pktfile))
+            pkt = fidonet.PacketFactory(open(pktfile))
 
             print '=' * 70
             print '%s: ' % pktfile,
@@ -27,12 +27,6 @@ class App (fidonet.app.App):
             print '%(destZone)s:%(destNet)s/%(destNode)s' % pkt,
             print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % pkt
             print '=' * 70
-            print 'V:%(pktVersion)s ' % pkt,
-            if pkt.parser == fidonet.packet.fts0001:
-                print 'S:FTS-0001',
-            else:
-                print 'S:FSC-0048 C:%(capWord)s' % pkt,
-            print
             print
 
             if self.opts.show_messages:
