@@ -23,9 +23,7 @@ class App (fidonet.app.App):
 
             print '=' * 70
             print '%s: ' % pktfile,
-            print '%(origZone)s:%(origNet)s/%(origNode)s ->' % pkt,
-            print '%(destZone)s:%(destNet)s/%(destNode)s' % pkt,
-            print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % pkt
+            print pkt
             print '=' * 70
             print
 

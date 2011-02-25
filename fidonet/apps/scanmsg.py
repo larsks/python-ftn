@@ -18,16 +18,8 @@ class App (fidonet.app.App):
     def handle_args(self, args):
 
         for msgfile in args:
-            msg = fidonet.MessageFactory(fd=open(msgfile))
-
-            print 'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % msg
-            print 'To: %(toUsername)s @ %(destNet)s/%(destNode)s' % msg
-            print 'Subject: %(subject)s' % msg
-            print 'Flags:',
-            for k,v in msg.attributeWord.items():
-                if v:
-                    print k.upper(),
-            print
+            msg = fidonet.MessageFactory(open(msgfile))
+            print msg
             print
 
             if self.opts.show_body:
@@ -35,7 +27,8 @@ class App (fidonet.app.App):
                     import pprint
                     pprint.pprint(msg.body)
                 else:
-                    print msg.body.render()
+                    print msg.body
+                print
 
 if __name__ == '__main__':
     App.run()

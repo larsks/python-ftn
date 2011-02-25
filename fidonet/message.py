@@ -43,8 +43,8 @@ class Message (Container):
         return '\n'.join(text)
 
 class MessageBody (Container):
-    def render(self):
-        return self.build(self)\
+    def __str__(self):
+        return self.build()\
                 .replace('\r', '\n')\
                 .replace('\x01', '[K]')
 

@@ -28,3 +28,12 @@ class Packet (Container):
 
     time = property(_get_time, _set_time)
 
+    def __str__ (self):
+        text = [
+                '%s -> %s @ %s' % (
+                    self.origAddr, self.destAddr,
+                    time.strftime('%Y-%m-%d %T', self.time))
+        ]
+
+        return '\n'.join(text)
+
