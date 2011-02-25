@@ -1,5 +1,0 @@
-#!/usr/bin/python
-
-import fidonet.apps.editpkt
-fidonet.apps.editpkt.App.run()
-

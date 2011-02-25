@@ -1,5 +1,0 @@
-#!/usr/bin/python
-
-import fidonet.apps.scanmsg
-fidonet.apps.scanmsg.App.run()
-

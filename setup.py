@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
+import os
 from setuptools import setup, find_packages
 
 setup(name = "fidonet",
-        version = "1",
+        version = "2",
         description = "FTN tools for Python",
         long_description=open('README.rst').read(),
         author = "Lars Kellogg-Stedman",
@@ -12,15 +13,26 @@ setup(name = "fidonet",
         packages = [
             'fidonet',
             'fidonet.apps',
+            'fidonet.formats',
             ],
-        scripts = [
-            'bin/ftn-msgedit',
-            'bin/ftn-reroute',
-            'bin/ftn-scanmsg',
-            'bin/ftn-scanpkt',
-            'bin/ftn-unpack',
-            'bin/ftn-pack',
-            ],
+        entry_points = {
+            'console_scripts': [
+                'ftn-poll = fidonet.apps.poll:App.run',
+
+                'ftn-pack = fidonet.apps.pack:App.run',
+                'ftn-unpack = fidonet.apps.unpack:App.run',
+
+                'ftn-scanmsg = fidonet.apps.scanmsg:App.run',
+                'ftn-editmsg = fidonet.apps.editmsg:App.run',
+                'ftn-makemsg = fidonet.apps.makemsg:App.run',
+
+                'ftn-editpkt = fidonet.apps.editpkt:App.run',
+                'ftn-scanpkt = fidonet.apps.scanpkt:App.run',
+
+                'ftn-indexnl = fidonet.apps.indexnl:App.run',
+                'ftn-route = fidonet.apps.route:App.run',
+                ],
+            },
         install_requires = [
             'bitstring',
             'sqlalchemy',
