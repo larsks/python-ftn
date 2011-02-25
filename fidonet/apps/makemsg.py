@@ -34,6 +34,13 @@ class App (fidonet.app.App):
         else:
             msg = diskmessage.MessageParser.create()
 
+        if not self.opts.origin:
+            try:
+                self.opts.origin = self.cfg.get('fidonet', 'address')
+                self.log.debug('got origin address = %s' % self.opts.origin)
+            except:
+                pass
+
         if self.opts.fromuser:
             msg.fromUsername = self.opts.fromuser
             self.log.debug('set fromUsername = %s' % msg.fromUsername)
@@ -45,7 +52,6 @@ class App (fidonet.app.App):
             self.log.debug('set subject = %s' % msg.subject)
 
         if self.opts.origin:
-            foo = Address(self.opts.origin)
             msg.origAddr = Address(self.opts.origin)
             self.log.debug('set originAddr = %s' % msg.origAddr)
         if self.opts.destination:
