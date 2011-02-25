@@ -10,8 +10,8 @@ class App (fidonet.app.App):
     This script will create two poll files::
 
         $ ls
-        007b01f4.out
-        014202f9.out
+        007b01f4.ilo
+        014202f9.ilo
 
     If you have configured a path to your binkd outbound directory in
     ``fidonet.cfg``, ftn-poll will create poll files there; otherwise it
@@ -26,7 +26,7 @@ class App (fidonet.app.App):
         for addr in args:
             addr = fidonet.Address(addr)
             self.log.info('creating poll for %s.' % addr)
-            open('%s.out' % addr.hex, 'w').close()
+            open('%s.ilo' % addr.hex, 'w').close()
 
 if __name__ == '__main__':
     App.run()

@@ -15,6 +15,7 @@ class App(fidonet.app.App):
         p.add_option('--output', '--out')
         p.add_option('-o', '--origin', '--orig')
         p.add_option('-d', '--destination', '--dest')
+        p.add_option('--stdout', action='store_true')
 
         return p
 
@@ -46,13 +47,17 @@ class App(fidonet.app.App):
                         msg.destAddr))
 
         if self.opts.output:
-            sys.stdout = open(self.opts.output, 'w')
+            outname = self.opts.output
+            out = open(outname, 'w')
+        elif self.opts.stdout:
+            outname = '<stdout>'
+            out = sys.stdout
         else:
-            self.opts.output = '<stdout>'
+            outname = '%s.out' % pkt.destAddr.hex
+            out = open(outname, 'w')
 
-        pkt.write(sys.stdout)
-        self.log.info('packed %d messages into %s.' % (count,
-            self.opts.output))
+        pkt.write(out)
+        self.log.info('packed %d messages into %s.' % (count, outname))
 
 if __name__ == '__main__':
     App.run()

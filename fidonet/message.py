@@ -32,6 +32,7 @@ class Message (Container):
         text = [
                 'From: %(fromUsername)s @ %(origAddr)s' % self,
                 'To: %(toUsername)s @ %(destAddr)s' % self,
+                'Date: %(dateTime)s' % self,
                 'Subject: %(subject)s' % self,
                 ]
         flags = [ 'Flags:' ]

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import time
 
 from fidonet import Address
 from fidonet.formats import *
@@ -18,6 +19,7 @@ class App (fidonet.app.App):
         p.add_option('-t', '--touser', '--to')
         p.add_option('-o', '--origin', '--orig')
         p.add_option('-d', '--destination', '--dest')
+        p.add_option('-T', '--time')
         p.add_option('--output', '--out')
         p.add_option('--disk', action='store_false',
                 dest='packed')
@@ -41,6 +43,9 @@ class App (fidonet.app.App):
             except:
                 pass
 
+        if not self.opts.time:
+            self.opts.time = time.strftime('%d %b %y  %H:%M:%S', time.localtime())
+
         if self.opts.fromuser:
             msg.fromUsername = self.opts.fromuser
             self.log.debug('set fromUsername = %s' % msg.fromUsername)
@@ -57,6 +62,10 @@ class App (fidonet.app.App):
         if self.opts.destination:
             msg.destAddr = Address(self.opts.destination)
             self.log.debug('set destinAddr = %s' % msg.destAddr)
+
+        if self.opts.time:
+            msg.dateTime = self.opts.time
+            self.log.debug('set dateTime = %s' % msg.dateTime)
 
         body = msg.body
 

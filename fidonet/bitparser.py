@@ -1,3 +1,5 @@
+import sys
+import logging
 import bitstring
 
 from ftnerror import *
@@ -86,6 +88,7 @@ class Struct (object):
             self._validate(data)
 
         for f in self._fieldlist:
+            logging.debug('packing field %s as "%s"' % (f.name, f.spec))
             try:
                 bitlist.append(f.pack(data[f.name]))
             except KeyError:
@@ -170,3 +173,14 @@ class PaddedString(Field):
         val = (val + self.padchar * self.length) [:self.length]
         return super(PaddedString, self).pack(val)
  
+class Constant(Field):
+    def __init__(self, name, spec, val):
+        super(Constant, self).__init__(name, spec, val)
+        self.val = val
+
+    def unpack(self, bits):
+        return self.val
+
+    def pack(self, val):
+        return super(Constant, self).pack(self.val)
+

@@ -12,7 +12,7 @@ Parsing packets
 
 ::
 
-  pkt = fidonet.PacketFactory(fd=open('05E89CD6.PKT'))
+  pkt = fidonet.PacketFactory(open('05E89CD6.PKT'))
 
   print 'FROM:', pkt.origAddr
   print '  TO:', pkt.destAddr
@@ -63,7 +63,10 @@ Creating messages
 
 ::
 
-  msg = fidonet.message.MessageParser.create()
+  from fidonet.formats import *
+
+  msg = packedmessage.MessageParser.create()
+
   msg.fromUsername = 'Lars'
   msg.toUsername = 'Joe'
   msg.subject = 'This is a test'
@@ -89,13 +92,15 @@ Creating packets
 
 ::
 
-  pkt = fidonet.packet.PacketParser.create()
+  from fidonet.formats import *
+
+  pkt = fsc0048packet.PacketParser.create()
   pkt.origAddr = fidonet.Address('1:322/761')
   pkt.destAddr = fidonet.Address('1:322/759')
   pkt.time = time.localtime()
 
-  pkt.messages.append(
-    fidonet.message.MessageParser.build(msg))
+  # add the message created in the previous example
+  pkt.messages.append(msg.build())
 
 Writing
 =======
@@ -103,10 +108,16 @@ Writing
 Writing messages
 ----------------
 
-::
+Writing a message in its native format::
 
   fd = open('1.msg', 'w')
-  fidonet.message.MessageParser.write(msg, fd)
+  msg.write(fd)
+
+Writing using an explicit format::
+
+  from fidonet.formats import *
+  diskmessage.MessageParser.write(msg, open('1.msg', 'w'))
+  packedmessage.MessageParser.write(msg, open('2.msg', 'w'))
 
 Writing packets
 ---------------
@@ -114,7 +125,47 @@ Writing packets
 ::
 
   fd = open('1.msg', 'w')
-  fidonet.message.PacketParser.write(pkt, fd)
+  pkt.write(fd)
+
+Example scripts
+===============
+
+ftn-reroute
+-----------
+
+``ftn-reroute`` changes the destination address in a packet.  You need to
+either provide an output file using the ``-o`` option or specify ``-i`` if
+you want to modify the packet in place::
+
+  ftn-reroute -r 1:123/500 05E6F017.PKT
+
+ftn-unpack
+----------
+
+``ftn-unpack`` unpacks messages from a packet and places them in an output
+directory::
+
+  ftn-unpack -o msgdir 05E6F017.PKT
+
+ftn-pack
+--------
+
+``ftn-pack`` creates a message packet from a list of messages. For example,
+if we have a directory called ``msgdir`` containing a number of messages
+ready for delivery, we can run the following command::
+
+  ftn-pack --to 1:322/759 --from 1:322/761 msgdir/*.msg
+
+This will create a file called "014202f7.out" in the current directory.
+
+ftn-msgedit
+-----------
+
+``ftn-msgedit`` edits the information in a message header::
+
+  ftn-msgedit --to 'Lars Kellogg-Stedman' --origin '1:123/500' msgdir/1.msg
+
+Note that ``ftn-msgedit`` makes changes in place.
 
 Fidonet Technical Standards
 ===========================
@@ -175,44 +226,4 @@ auditRequest
   Every routing system is requested to send a return receipt.
 fileUpdateRequest
   (unknown)
-
-Example scripts
-===============
-
-ftn-reroute
------------
-
-``ftn-reroute`` changes the destination address in a packet.  You need to
-either provide an output file using the ``-o`` option or specify ``-i`` if
-you want to modify the packet in place::
-
-  ftn-reroute -r 1:123/500 05E6F017.PKT
-
-ftn-unpack
-----------
-
-``ftn-unpack`` unpacks messages from a packet and places them in an output
-directory::
-
-  ftn-unpack -o msgdir 05E6F017.PKT
-
-ftn-pack
---------
-
-``ftn-pack`` creates a message packet from a list of messages. For example,
-if we have a directory called ``msgdir`` containing a number of messages
-ready for delivery, we can run the following command::
-
-  ftn-pack --to 1:322/759 --from 1:322/761 msgdir/*.msg
-
-This will create a file called "014202f7.out" in the current directory.
-
-ftn-msgedit
------------
-
-``ftn-msgedit`` edits the information in a message header::
-
-  ftn-msgedit --to 'Lars Kellogg-Stedman' --origin '1:123/500' msgdir/1.msg
-
-Note that ``ftn-msgedit`` makes changes in place.
 

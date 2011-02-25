@@ -14,12 +14,12 @@ MessageParser = Struct(
             Field('destNet', 'uintle:16'),
             BitStream('attributeWord', length=16),
             Field('cost', 'uintle:16'),
-            PaddedString('dateTime', 20, ' '),
+            PaddedString('dateTime', 20, '\x00'),
             CString('toUsername'),
             CString('fromUsername'),
             CString('subject'),
             CString('body', default=''),
-
-            factory=Message
+            Constant('eop', 'bytes:2', '\x00\x00'),
+            factory=Message,
             )
 
