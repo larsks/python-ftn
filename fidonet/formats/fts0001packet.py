@@ -5,7 +5,7 @@ format.
 .. _FTS-0001: http://www.ftsc.org/docs/fts-0001.016
 '''
 
-from fidonet.bitparser import Struct, Field, CString, BitStream
+from fidonet.bitparser import *
 from fidonet.util import fixup_packet
 from fidonet.packet import Packet
 
@@ -29,6 +29,7 @@ PacketParser = Struct(
             Field('destZone', 'uintle:16'),
             Field('fill', 'bytes:20'),
             BitStream('messages'),
+            Constant('eop', 'bytes:2', '\x00\x00'),
 
             validate=fixup_packet,
             factory=Packet

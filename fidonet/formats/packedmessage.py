@@ -19,7 +19,7 @@ MessageParser = Struct(
             CString('fromUsername'),
             CString('subject'),
             CString('body', default=''),
-            Constant('eop', 'bytes:2', '\x00\x00'),
+
             factory=Message,
             )
 
