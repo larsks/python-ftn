@@ -6,7 +6,6 @@ import time
 
 import fidonet
 import fidonet.app
-import fidonet.message
 
 class App (fidonet.app.App):
     logtag = 'fidonet.editpkt'
@@ -28,7 +27,7 @@ class App (fidonet.app.App):
         for pktfile in args:
             self.log.info('Editing %s.' % pktfile)
             fd = open(pktfile, 'r+')
-            pkt = fidonet.PacketFactory(fd=fd)
+            pkt = fidonet.PacketFactory(fd)
 
             if self.opts.origin:
                 pkt.origAddr = fidonet.Address(self.opts.origin)
@@ -45,8 +44,11 @@ class App (fidonet.app.App):
                 pkt.capWord = int(self.opts.capword)
                 self.log.debug('set capword = %d' % pkt.capWord)
 
+            print pkt
+
             fd.seek(0)
-            fidonet.packet.PacketParser.write(pkt, fd)
+            pkt.write(fd)
+            self.log.info('Wrote edits to %s.' % pktfile)
             fd.close()
 
 if __name__ == '__main__':
