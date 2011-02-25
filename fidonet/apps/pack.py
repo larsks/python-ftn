@@ -2,11 +2,9 @@ import os
 import sys
 import time
 
-import fidonet
-import fidonet.packet
-import fidonet.message
+from fidonet import Address, MessageFactory
+from fidonet.formats import *
 import fidonet.app
-from fidonet.address import Address
 
 class App(fidonet.app.App):
     logtag = 'fidonet.pack'
@@ -32,7 +30,7 @@ class App(fidonet.app.App):
             self.log.error('Missing destination address.')
             sys.exit(1)
 
-        pkt = fidonet.packet.PacketParser.create()
+        pkt = fsc0048packet.PacketParser.create()
 
         pkt.origAddr = Address(self.opts.origin)
         pkt.destAddr = Address(self.opts.destination)
@@ -40,8 +38,8 @@ class App(fidonet.app.App):
 
         count = 0
         for msgfile in args:
-            msg = fidonet.MessageFactory(fd=open(msgfile))
-            pkt.messages.append(fidonet.message.MessageParser.build(msg))
+            msg = MessageFactory(open(msgfile))
+            pkt.messages.append(packedmessage.MessageParser.build(msg))
             count += 1
             self.log.info('packed message from %s @ %s to %s @ %s' %
                     (msg.fromUsername, msg.origAddr, msg.toUsername,
@@ -52,7 +50,7 @@ class App(fidonet.app.App):
         else:
             self.opts.output = '<stdout>'
 
-        fidonet.packet.PacketParser.write(pkt, sys.stdout)
+        pkt.write(sys.stdout)
         self.log.info('packed %d messages into %s.' % (count,
             self.opts.output))
 
