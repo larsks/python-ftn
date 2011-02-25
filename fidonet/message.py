@@ -30,8 +30,8 @@ class Message (Container):
 
     def __str__ (self):
         text = [
-                'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % self,
-                'To: %(toUsername)s @ %(destNet)s/%(destNode)s' % self,
+                'From: %(fromUsername)s @ %(origAddr)s' % self,
+                'To: %(toUsername)s @ %(destAddr)s' % self,
                 'Subject: %(subject)s' % self,
                 ]
         flags = [ 'Flags:' ]
