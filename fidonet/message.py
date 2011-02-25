@@ -5,36 +5,18 @@ from StringIO import StringIO
 
 from ftnerror import *
 from util import *
-from bitparser import Struct, Field, CString, Container
-
+from bitparser import Container
 import odict
 
-attributeWordParser = Struct(
-        Field('private', 'uint:1'),
-        Field('crash', 'uint:1'),
-        Field('received', 'uint:1'),
-        Field('sent', 'uint:1'),
-        Field('fileAttached', 'uint:1'),
-        Field('inTransit', 'uint:1'),
-        Field('orphan', 'uint:1'),
-        Field('killSent', 'uint:1'),
-        Field('local', 'uint:1'),
-        Field('holdForPickup', 'uint:1'),
-        Field('unused1', 'uint:1'),
-        Field('fileRequest', 'uint:1'),
-        Field('returnReceiptRequested', 'uint:1'),
-        Field('isReturnReceipt', 'uint:1'),
-        Field('auditRequest', 'uint:1'),
-        Field('fileUpdateRequest', 'uint:1'),
-        )
+from formats import packedmessage, diskmessage, attributeword
 
 class Message (Container):
     def _setAW (self, aw):
-        self['attributeWord'] = attributeWordParser.build(aw)
+        self['attributeWord'] = attributeword.AttributeWordParser.build(aw)
 
     def _getAW (self):
         self['attributeWord'].pos = 0
-        return attributeWordParser.parse(self['attributeWord'])
+        return attributeword.AttributeWordParser.parse(self['attributeWord'])
 
     attributeWord = property(_getAW, _setAW)
 
@@ -49,43 +31,29 @@ class Message (Container):
     origAddr = ftn_address_property('orig')
     destAddr = ftn_address_property('dest')
 
-MessageParser = Struct(
-            Field('msgVersion', 'uintle:16', default=2),
-            Field('origNode', 'uintle:16'),
-            Field('destNode', 'uintle:16'),
-            Field('origNet', 'uintle:16'),
-            Field('destNet', 'uintle:16'),
-            Field('attributeWord', 'bits:16',
-                default=bitstring.BitStream(16)),
-            Field('cost', 'uintle:16'),
-            Field('dateTime', 'bytes:20',
-                default=' '*20),
-            CString('toUsername'),
-            CString('fromUsername'),
-            CString('subject'),
-            CString('body', default=''),
-
-            factory = Message
-            )
-
 class MessageBody (Container):
     def render(self):
-        return MessageBodyParser.build(self)\
+        return self.build(self)\
                 .replace('\r', '\n')\
                 .replace('\x01', '[K]')
 
+# Everything below this is an ungodly mess.  Why, Fidonet, why!?
+
 class _MessageBodyParser (object):
-    def __init__ (self, kludgePrefix='\x01'):
-        self.kludgePrefix = kludgePrefix
+    kludgePrefix = '\x01'
 
     def create(self):
-        return MessageBody({
+        body = MessageBody(self, {
             'area': None,
             'origin': None,
             'klines': odict.odict(),
             'seenby': [],
             'body': '',
             })
+
+        body.__struct__ = self
+
+        return body
 
     def parse(self, raw):
         msg = self.create()
@@ -99,7 +67,9 @@ class _MessageBodyParser (object):
 
                 if line.startswith('AREA:'):
                     msg['area'] = line.split(':', 1)[1]
-            elif state == 1:
+                    continue
+
+            if state == 1:
                 if line.startswith('\x01'):
                     self.addKludge(msg, line)
                 elif line.startswith(' * Origin:'):
@@ -149,16 +119,19 @@ class _MessageBodyParser (object):
         else:
             msg['klines'][k] = [v]
 
-    def __str__ (self):
-        return '\n'.join(self.lines)
-
 MessageBodyParser = _MessageBodyParser()
+MessageParser = packedmessage.MessageParser
 
 def MessageFactory(bits=None, fd=None):
-    if bits is not None:
-        return MessageParser.parse(bits)
-    elif fd is not None:
-        return MessageParser.parse_fd(fd)
+    if bits is None:
+        bits = bitstring.ConstBitStream(fd)
+
+    msg = packedmessage.MessageParser.parse(bits, Message)
+    if msg.msgVersion != 2:
+        bits.pos = 0
+        msg = diskmessage.MessageParser.parse(bits, Message)
+
+    return msg
 
 if __name__ == '__main__':
     m = MessageFactory(fd=open(sys.argv[1]))

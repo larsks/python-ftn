@@ -23,15 +23,18 @@ class App(fidonet.app.App):
         gtotal = 0
 
         for pktfile in args:
-            pkt = fidonet.PacketFactory(fd=open(args.pop(0)))
+            pkt = fidonet.PacketFactory(fd=open(pktfile))
 
             count = 0
             while True:
                 try:
-                    m = fidonet.MessageFactory(pkt.messages)
-                    fd = open(next_message(self.opts.output_directory), 'w')
-                    fidonet.message.MessageParser.write(m, fd)
+                    msg = fidonet.MessageFactory(pkt.messages)
+                    msgfile = next_message(self.opts.output_directory)
+                    fd = open(msgfile, 'w')
+                    fidonet.message.MessageParser.write(msg, fd)
                     fd.close()
+                    self.log.debug('wrote message from %s to %s' % (
+                        pktfile, msgfile))
                     count += 1
                 except fidonet.EndOfData:
                     break

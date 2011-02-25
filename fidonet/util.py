@@ -14,4 +14,11 @@ def ftn_address_property(name):
 
     return property(_get, _set)
 
+def fixup_packet(pkt):
+    if 'capWord' in pkt:
+        pkt['capWordValidationCopy'] = pkt['capWord']
+
+    if 'qOrigNode' in pkt:
+        pkt['qOrigNode'] = pkt['origNode']
+        pkt['qOrigNet'] = pkt['origNet']
 
