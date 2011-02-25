@@ -1,10 +1,6 @@
-#import packet
-#import message
-#import address
-#
-#from ftnerror import *
-#
-#Address = address.Address
-#MessageFactory = message.MessageFactory
-#PacketFactory = packet.PacketFactory
-#
+from ftnerror import *
+
+from packetfactory import PacketFactory
+from messagefactory import MessageFactory
+from address import Address
+
