@@ -4,8 +4,8 @@ from ftnerror import *
 
 class Container(dict):
 
-    def __init__(self, struct, *args, **kwargs):
-        super(Container, self).__init__(*args, **kwargs)
+    def __init__(self, struct, *args, **kw):
+        super(Container, self).__init__(*args, **kw)
         self.__struct__ = struct
 
     def __getattr__ (self, k):
@@ -44,29 +44,25 @@ class Struct (object):
         if 'validate' in kw:
             self._validate = kw['validate']
 
-    def parse(self, bits, factory=None):
-        if factory:
-            data = factory(self)
-        else:
-            data = self.__factory(self)
-
+    def parse(self, bits):
+        data = self.__factory(self)
         self.bits = bits
 
         try:
             for f in self._fieldlist:
                 data[f.name] = f.unpack(bits)
         except bitstring.errors.ReadError:
-            raise
+            raise EndOfData
 
         return data
 
-    def parse_fd(self, fd, **kw):
+    def parse_fd(self, fd):
         bits = bitstring.ConstBitStream(fd)
-        return self.parse(bits, **kw)
+        return self.parse(bits)
 
-    def parse_bytes(self, bytes, **kw):
+    def parse_bytes(self, bytes):
         bits = bitstring.ConstBitStream(bytes=bytes)
-        return self.parse(bits, **kw)
+        return self.parse(bits)
 
     def build(self, data):
         bitlist = bitstring.BitStream()
@@ -97,26 +93,17 @@ class Struct (object):
         return d
 
 class Field (object):
-    def __init__ (self, name, spec=None,
-            utransform=None, ptransform=None,
-            default=0):
-
-        if utransform is None:
-            utransform = lambda x: x
-        if ptransform is None:
-            ptransform = lambda x: x
+    def __init__ (self, name, spec=None, default=0):
 
         self.name = name
         self.spec = spec
-        self.utransform = utransform
-        self.ptransform = ptransform
         self.default = default
 
     def unpack(self, bits):
-        return self.utransform(self.__unpack(bits))
+        return self.__unpack(bits)
 
     def pack(self, val):
-        return bitstring.pack(self.spec, self.ptransform(self.__pack(val)))
+        return bitstring.pack(self.spec, self.__pack(val))
 
     def __unpack(self, bits):
         return bits.read(self.spec)
@@ -125,8 +112,8 @@ class Field (object):
         return val
 
 class CString(Field):
-    def __init__ (self, *args, **kwargs):
-        super(CString, self).__init__(*args, **kwargs)
+    def __init__ (self, *args, **kw):
+        super(CString, self).__init__(*args, **kw)
         self.spec = 'bytes, 0x00'
 
     def unpack(self, bits):
@@ -153,7 +140,8 @@ class BitStream(Field):
 
 class PaddedString(Field):
     def __init__(self, name, length=0, padchar=' ', **kw):
-        super(PaddedString, self).__init__(name, 'bytes:%d' % length)
+        super(PaddedString, self).__init__(name, 'bytes:%d' % length,
+                default=padchar * length)
         self.length = length
         self.padchar = padchar
 
