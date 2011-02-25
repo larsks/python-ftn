@@ -5,10 +5,7 @@ import time
 
 from ftnerror import *
 from util import *
-from formats import *
-
 from bitparser import Container
-from address import Address
 
 class Packet (Container):
 
@@ -30,33 +27,4 @@ class Packet (Container):
         self.second = t.tm_sec
 
     time = property(_get_time, _set_time)
-
-def PacketFactory(bits=None, fd=None):
-    if bits is None:
-        bits = bitstring.ConstBitStream(fd)
-
-    pkt = fsc0048packet.PacketParser.parse(bits, factory=Packet)
-
-    # Heuristics from FSC-0048:
-    # http://www.ftsc.org/docs/fsc-0048.002
-    if pkt.pktVersion != 2:
-        raise InvalidPacket()
-
-    if pkt.capWord != pkt.capWordValidationCopy \
-            or pkt.capWord == 0 \
-            or pkt.capWord & 0x01 == 0:
-        bits.pos = 0
-        pkt = fts0001packet.PacketParser.parse(bits, factory=Packet)
-
-    return pkt
-
-if __name__ == '__main__':
-    p = PacketFactory(fd=open(sys.argv[1]))
-
-    print '=' * 70
-    print '%(origZone)s:%(origNet)s/%(origNode)s ->' % p,
-    print '%(destZone)s:%(destNet)s/%(destNode)s' % p,
-    print '@ %(year)s-%(month)s-%(day)s %(hour)s:%(minute)s:%(second)s' % p
-    print '=' * 70
-    print
 

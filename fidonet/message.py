@@ -1,14 +1,11 @@
 import os
 import sys
-import bitstring
-from StringIO import StringIO
 
 from ftnerror import *
 from util import *
 from bitparser import Container
 import odict
-
-from formats import packedmessage, diskmessage, attributeword
+from formats import attributeword
 
 class Message (Container):
     def _setAW (self, aw):
@@ -30,6 +27,20 @@ class Message (Container):
 
     origAddr = ftn_address_property('orig')
     destAddr = ftn_address_property('dest')
+
+    def __str__ (self):
+        text = [
+                'From: %(fromUsername)s @ %(origNet)s/%(origNode)s' % self,
+                'To: %(toUsername)s @ %(destNet)s/%(destNode)s' % self,
+                'Subject: %(subject)s' % self,
+                ]
+        flags = [ 'Flags:' ]
+        for k,v in self.attributeWord.items():
+            if v:
+                flags.append(k.upper())
+
+        text.append(' '.join(flags))
+        return '\n'.join(text)
 
 class MessageBody (Container):
     def render(self):
@@ -85,7 +96,7 @@ class _MessageBodyParser (object):
                 elif len(line) == 0:
                     pass
                 else:
-                    raise ValueError('Unexpected: %s'    % line)
+                    raise InvalidMessage('Unexpected: %s'    % line)
 
         msg['body'] = '\n'.join(body)
 
@@ -120,19 +131,4 @@ class _MessageBodyParser (object):
             msg['klines'][k] = [v]
 
 MessageBodyParser = _MessageBodyParser()
-MessageParser = packedmessage.MessageParser
-
-def MessageFactory(bits=None, fd=None):
-    if bits is None:
-        bits = bitstring.ConstBitStream(fd)
-
-    msg = packedmessage.MessageParser.parse(bits, Message)
-    if msg.msgVersion != 2:
-        bits.pos = 0
-        msg = diskmessage.MessageParser.parse(bits, Message)
-
-    return msg
-
-if __name__ == '__main__':
-    m = MessageFactory(fd=open(sys.argv[1]))
 

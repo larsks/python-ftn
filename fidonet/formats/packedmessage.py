@@ -3,7 +3,8 @@
 .. _FTS-0001: http://www.ftsc.org/docs/fts-0001.016
 '''
 
-from fidonet.bitparser import Struct, Field, CString, BitStream
+from fidonet.bitparser import *
+from fidonet.message import Message
 
 MessageParser = Struct(
             Field('msgVersion', 'uintle:16', default=2),
@@ -13,13 +14,12 @@ MessageParser = Struct(
             Field('destNet', 'uintle:16'),
             BitStream('attributeWord', length=16),
             Field('cost', 'uintle:16'),
-            Field('dateTime', 'bytes:20',
-                default=' '*20,
-                ptransform=lambda x: (x + ' '*20)[:20]),
+            PaddedString('dateTime', 20, ' '),
             CString('toUsername'),
             CString('fromUsername'),
             CString('subject'),
             CString('body', default=''),
-            )
 
+            factory=Message
+            )
 

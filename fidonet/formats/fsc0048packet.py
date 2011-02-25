@@ -7,6 +7,7 @@ determining which format is appropriate for parsing a given packet.
 
 from fidonet.bitparser import Struct, Field, BitStream, CString
 from fidonet.util import fixup_packet
+from fidonet.packet import Packet
 
 PacketParser = Struct(
             Field('origNode', 'uintle:16'),
@@ -38,6 +39,7 @@ PacketParser = Struct(
             Field('productData', 'uintle:32'),
             BitStream('messages'),
 
-            validate=fixup_packet
+            validate=fixup_packet,
+            factory=Packet
             )
 

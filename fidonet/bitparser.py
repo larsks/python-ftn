@@ -112,14 +112,17 @@ class Field (object):
         self.ptransform = ptransform
         self.default = default
 
-#    def __repr__ (self):
-#        return '<Field "%s" (%s)>' % (self.name, self.spec)
-
     def unpack(self, bits):
-        return self.utransform(bits.read(self.spec))
+        return self.utransform(self.__unpack(bits))
 
     def pack(self, val):
-        return bitstring.pack(self.spec, self.ptransform(val))
+        return bitstring.pack(self.spec, self.ptransform(self.__pack(val)))
+
+    def __unpack(self, bits):
+        return bits.read(self.spec)
+
+    def __pack(self, val):
+        return val
 
 class CString(Field):
     def __init__ (self, *args, **kwargs):
@@ -148,3 +151,19 @@ class BitStream(Field):
         super(BitStream, self).__init__(name, spec,
                 default=_streammaker(length))
 
+class PaddedString(Field):
+    def __init__(self, name, length=0, padchar=' ', **kw):
+        super(PaddedString, self).__init__(name, 'bytes:%d' % length)
+        self.length = length
+        self.padchar = padchar
+
+    def unpack(self, bits):
+        v = super(PaddedString, self).unpack(bits)
+        v.rstrip(self.padchar)
+
+        return v
+
+    def pack(self, val):
+        val = val + self.padchar * self.length [:self.length]
+        return super(PaddedString, self).pack(val)
+ 
