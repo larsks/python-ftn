@@ -7,7 +7,7 @@ from formats import *
 from packet import Packet
 
 def PacketFactory(src):
-    if isinstance(src, bitstring.BitArray):
+    if isinstance(src, bitstring.ConstBitArray):
         bits = src
     elif hasattr(src, 'read'):
         bits = bitstring.ConstBitStream(src)

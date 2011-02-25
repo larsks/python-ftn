@@ -7,18 +7,19 @@ from fidonet.ftnerror import *
 from message import Message, MessageBodyParser
 
 def MessageFactory(src):
-    if isinstance(src, bitstring.BitArray):
+    if isinstance(src, bitstring.ConstBitArray):
         bits = src
     elif hasattr(src, 'read'):
         bits = bitstring.ConstBitStream(src)
     else:
         raise InvalidMessage()
 
+    mark = bits.pos
     msg = packedmessage.MessageParser.parse(bits)
     if msg.msgVersion != 2:
         logging.debug('msgVersion != 2; assuming this '
                 'is an FTS-0001 (B) message.')
-        bits.pos = 0
+        bits.pos = mark
         msg = diskmessage.MessageParser.parse(bits)
     else:
         logging.debug('msgVersion == 2; assuming this '
