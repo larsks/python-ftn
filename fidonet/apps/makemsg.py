@@ -22,6 +22,8 @@ class App (fidonet.app.App):
         p.add_option('-d', '--destination', '--dest')
         p.add_option('-T', '--time')
         p.add_option('-A', '--area')
+        p.add_option('-g', '--flag', action='append',
+                default=[])
         p.add_option('--output', '--out')
         p.add_option('--disk', action='store_false',
                 dest='packed')
@@ -68,6 +70,12 @@ class App (fidonet.app.App):
         if self.opts.time:
             msg.dateTime = self.opts.time
             self.log.debug('set dateTime = %s' % msg.dateTime)
+
+        # set message attributes
+        attr = attributeword.AttributeWordParser.create()
+        for f in self.opts.flag:
+            attr[f] = 1
+        msg.attributeWord = attr
 
         body = msg.body
 
