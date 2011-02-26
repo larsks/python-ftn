@@ -7,7 +7,7 @@ Reading a packet
 
 Read a packet from a file using the ``parse_fd`` method:
 
-    >>> pkt = PacketParser.parse_fd(open('sample.pkt'))
+    >>> pkt = PacketParser.parse_fd(open('tests/sample.pkt'))
 
 Accessing packet data
 ---------------------
