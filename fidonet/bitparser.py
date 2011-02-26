@@ -1,3 +1,11 @@
+'''The ``bitparser`` module is a wrapper around bitstring_ that allows
+you to define data structures using a simple (I hope) declarative syntax.
+The syntax was inspired by the abandoned construct_ module.
+
+.. _bitstring: http://code.google.com/p/python-bitstring/
+.. _construct: http://construct.wikispaces.com/
+'''
+
 import sys
 import logging
 import bitstring
@@ -5,6 +13,8 @@ import bitstring
 from ftnerror import *
 
 class Container(dict):
+    '''The ``Struct`` class returns ``Container`` instances when you call any
+    of the ``parse`` methods.'''
 
     def __init__(self, struct, *args, **kw):
         super(Container, self).__init__(*args, **kw)
@@ -39,13 +49,31 @@ class Container(dict):
                 raise
 
     def build(self):
+        '''Return the binary representation of this object as a
+        BitStream.'''
         return self.__struct__.build(self)
+
     def write(self, fd):
+        '''Write the binary representation of this object to a file.'''
         return self.__struct__.write(self, fd)
 
 class Struct (object):
 
     def __init__ (self, *fields, **kw):
+        '''Create a new Struct instance.
+
+        - ``fields`` -- a list of ``Field`` instances that define the data
+          structure.
+
+        You may also pass the following keyword arguments:
+
+        - ``factory`` -- controls the class return by the ``parse``
+          methods.  This should generally be a ``Container`` instance.
+        - ``validate`` -- this function is called immediately before
+          building the binary representation of the Struct.  Use it to
+          check the Struct or impose policy.
+        '''
+
         self._fields = {}
         self._fieldlist = []
 
@@ -62,6 +90,8 @@ class Struct (object):
             self._validate = kw['validate']
 
     def parse(self, bits):
+        '''Parse a binary stream into a structured format.'''
+
         data = self.__factory(self)
         self.bits = bits
 
@@ -74,14 +104,20 @@ class Struct (object):
         return data
 
     def parse_fd(self, fd):
+        '''Parse binary data from an open file into a structured format.'''
+
         bits = bitstring.ConstBitStream(fd)
         return self.parse(bits)
 
     def parse_bytes(self, bytes):
+        '''Parse a sequence of bytes into a structued format.'''
+
         bits = bitstring.ConstBitStream(bytes=bytes)
         return self.parse(bits)
 
     def build(self, data):
+        '''Transform a structured format into a binrary representation.'''
+
         bitlist = bitstring.BitStream()
 
         if hasattr(self, '_validate'):
@@ -97,9 +133,15 @@ class Struct (object):
         return bitlist
 
     def write(self, data, fd):
+        '''Write the binary representation of a structured format to an
+        open file.'''
+
         fd.write(self.build(data).bytes)
 
     def create(self):
+        '''Return an empty Container instance corresponding to this
+        Struct.'''
+
         d = self.__factory(self)
 
         for f in self._fieldlist:
@@ -111,6 +153,8 @@ class Struct (object):
         return d
 
 class Field (object):
+    '''Represents a field in a binary structure.'''
+
     def __init__ (self, name, spec=None, default=0):
 
         self.name = name
@@ -130,6 +174,8 @@ class Field (object):
         return val
 
 class CString(Field):
+    '''A NUL-terminated string.'''
+
     def __init__ (self, *args, **kw):
         super(CString, self).__init__(*args, **kw)
         self.spec = 'bytes, 0x00'
@@ -148,6 +194,10 @@ def _streammaker(length):
     return _
 
 class BitStream(Field):
+    '''A BitStream.  If length is unspecified, consumes all the remaining
+    bytes in the stream, otherwise this is a bit field of the given
+    length.'''
+
     def __init__(self, name, length=None):
         if length:
             spec = 'bits:%d' % length
@@ -157,6 +207,8 @@ class BitStream(Field):
                 default=_streammaker(length))
 
 class PaddedString(Field):
+    '''A fixed-width string filled with a padding character.'''
+
     def __init__(self, name, length=0, padchar=' ', **kw):
         super(PaddedString, self).__init__(name, 'bytes:%d' % length,
                 default=padchar * length)
@@ -174,11 +226,15 @@ class PaddedString(Field):
         return super(PaddedString, self).pack(val)
  
 class Constant(Field):
+    '''A constant field.'''
+
     def __init__(self, name, spec, val):
         super(Constant, self).__init__(name, spec, val)
         self.val = val
 
     def unpack(self, bits):
+        '''Advance the bit position but ignore the read bits and return a
+        constant value.'''
         return self.val
 
     def pack(self, val):
