@@ -39,6 +39,7 @@ class Node(Base):
     speed = Column(String)
 
     zone = Column(Integer, index=True)
+    region = Column(Integer, index=True)
     net = Column(Integer, index=True)
     node = Column(Integer)
 
@@ -56,9 +57,11 @@ class Node(Base):
 
         if self.kw == 'Zone':
             addr.zone = self.node
+            addr.region = self.node
             addr.net = self.node
             addr.node = 0
         elif self.kw == 'Region':
+            addr.region = self.node
             addr.net = self.node
             addr.node = 0
         elif self.kw == 'Host':
@@ -68,6 +71,7 @@ class Node(Base):
             addr.node = self.node
 
         self.zone = addr.zone
+        self.region = addr.region
         self.net = addr.net
         self.node = addr.node
         self.address = addr.ftn
