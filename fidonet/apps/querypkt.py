@@ -7,7 +7,7 @@ import fidonet
 import fidonet.app
 
 class App (fidonet.app.App):
-    logtag = 'fidonet.querymsg'
+    logtag = 'fidonet.querypkt'
 
     def create_parser(self):
         p = super(App, self).create_parser()
@@ -15,24 +15,24 @@ class App (fidonet.app.App):
         p.add_option('--queryformat', '--qf')
         return p
 
-    def query_msg(self, fd, name):
-        msg = fidonet.MessageFactory(fd)
+    def query_pkt(self, fd, name):
+        pkt = fidonet.PacketFactory(fd)
         
         try:
             if self.opts.queryformat:
-                print self.opts.queryformat % msg
+                print self.opts.queryformat % pkt
             else:
                 for k in self.opts.query:
-                    print msg[k]
+                    print pkt[k]
         except KeyError, detail:
             print >>sys.stderr, 'error: %s: no such field.' % detail
 
     def handle_args(self, args):
         if args:
-            for msgfile in args:
-                self.query_msg(open(msgfile), msgfile)
+            for pktfile in args:
+                self.query_pkt(open(pktfile), pktfile)
         else:
-            self.query_msg(sys.stdin, '<stdin>')
+            self.query_pkt(sys.stdin, '<stdin>')
 
 if __name__ == '__main__':
     App.run()
