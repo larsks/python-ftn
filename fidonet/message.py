@@ -1,3 +1,59 @@
+'''A wrapper class for FTN format messages.
+
+Reading a message
+-----------------
+
+Read a packet from a file using the ``fidonet.MessageFactory``
+method:
+
+    >>> import fidonet
+    >>> msg = fidonet.MessageFactory(open('tests/sample.msg'))
+
+Accessing message data
+-----------------------
+
+You can access message data as a dictionary:
+
+    >>> msg['fromUsername']
+    'Lars'
+
+Or using dot notation:
+
+    >>> msg.fromUsername
+    'Lars'
+
+Special properties
+------------------
+
+The ``origAddr`` and ``destAddr`` properties return the corresponding
+address as a ``fidonet.Address`` instance:
+
+    >>> msg.origAddr.ftn
+    '322/761'
+
+You can assign an Address object to this property to update the packet:
+
+    >>> from fidonet.address import Address
+    >>> msg.origAddr = Address('1:100/100')
+    >>> msg.origAddr.ftn
+    '1:100/100'
+
+The ``body`` property returns a MessageBody instance:
+
+    >>> b = msg.body
+    >>> b.klines['MSGID:']
+    ['1:322/761 ea6ec1dd']
+    >>> b.area = 'FIDO_UTIL'
+    >>> msg.body = b
+
+Writing a message
+-----------------
+
+Write a message to an open file using the ``write`` method:
+
+    >>> msg.write(open('updated.msg', 'w'))
+'''
+
 import os
 import sys
 
