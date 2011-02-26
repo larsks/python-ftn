@@ -2,6 +2,7 @@
 
 import sys
 import time
+import random
 
 from fidonet import Address
 from fidonet.formats import *
@@ -69,6 +70,10 @@ class App (fidonet.app.App):
 
         body = msg.body
 
+        body.klines['INTL'] = ['%(destAddr)s %(origAddr)s' % msg]
+        body.klines['PID:'] = [self.logtag]
+        body.klines['MSGID:'] = [ '%(origAddr)s ' % msg + '%08x' % self.next_message_id() ]
+
         for k in self.opts.kludge:
             k_name, k_val = k.split(' ', 1)
             body.klines[k_name] = body.klines.get(k_name, []) + [k_val]
@@ -82,6 +87,12 @@ class App (fidonet.app.App):
         msg.body = body
 
         msg.write(sys.stdout)
+
+    def next_message_id(self):
+        '''so really this should generate message ids from a monotonically
+        incrementing sequence...'''
+        return random.randint(0,2**32)
+
 
 if __name__ == '__main__':
     App.run()
