@@ -2,6 +2,9 @@
 
 import os
 import sys
+import tempfile
+
+import bitstring
 
 import fidonet
 import fidonet.app
@@ -15,8 +18,8 @@ class App (fidonet.app.App):
         p.add_option('--queryformat', '--qf')
         return p
 
-    def query_msg(self, fd, name):
-        msg = fidonet.MessageFactory(fd)
+    def query_msg(self, src, name, ctx):
+        msg = fidonet.MessageFactory(src)
         
         try:
             if self.opts.queryformat:
@@ -28,11 +31,7 @@ class App (fidonet.app.App):
             print >>sys.stderr, 'error: %s: no such field.' % detail
 
     def handle_args(self, args):
-        if args:
-            for msgfile in args:
-                self.query_msg(open(msgfile), msgfile)
-        else:
-            self.query_msg(sys.stdin, '<stdin>')
+        self.for_each_arg(self.query_msg, args)
 
 if __name__ == '__main__':
     App.run()

@@ -15,8 +15,8 @@ class App (fidonet.app.App):
         p.add_option('--queryformat', '--qf')
         return p
 
-    def query_pkt(self, fd, name):
-        pkt = fidonet.PacketFactory(fd)
+    def query_pkt(self, src, name, ctx):
+        pkt = fidonet.PacketFactory(src)
         
         try:
             if self.opts.queryformat:
@@ -28,11 +28,7 @@ class App (fidonet.app.App):
             print >>sys.stderr, 'error: %s: no such field.' % detail
 
     def handle_args(self, args):
-        if args:
-            for pktfile in args:
-                self.query_pkt(open(pktfile), pktfile)
-        else:
-            self.query_pkt(sys.stdin, '<stdin>')
+        self.for_each_arg(self.query_pkt, args)
 
 if __name__ == '__main__':
     App.run()

@@ -16,19 +16,20 @@ class App (fidonet.app.App):
         return p
 
     def handle_args(self, args):
+        self.for_each_arg(self.scan_msg, args)
 
-        for msgfile in args:
-            msg = fidonet.MessageFactory(open(msgfile))
-            print msg
+    def scan_msg(self, src, name, ctx):
+        msg = fidonet.MessageFactory(src)
+        print msg
+        print
+
+        if self.opts.show_body:
+            if self.opts.debug:
+                import pprint
+                pprint.pprint(msg.body)
+            else:
+                print msg.body
             print
-
-            if self.opts.show_body:
-                if self.opts.debug:
-                    import pprint
-                    pprint.pprint(msg.body)
-                else:
-                    print msg.body
-                print
 
 if __name__ == '__main__':
     App.run()

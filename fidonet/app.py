@@ -4,6 +4,8 @@ import optparse
 import logging
 import ConfigParser
 
+import bitstring
+
 class App (object):
     logtag = 'fidonet'
 
@@ -101,6 +103,19 @@ class App (object):
 
     def handle_args(self, args):
         pass
+
+    def for_each_arg(self, func, args, ctx=None):
+        if not args:
+            args = ['-']
+
+        for msgfile in args:
+            if msgfile == '-':
+                msgbits = bitstring.ConstBitStream(bytes=sys.stdin.read())
+                msgfile = '<stdin>'
+            else:
+                msgbits = open(msgfile)
+
+            func(msgbits, msgfile, ctx=ctx)
 
 if __name__ == '__main__':
     App.run()

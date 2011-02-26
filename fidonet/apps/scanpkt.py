@@ -17,28 +17,29 @@ class App (fidonet.app.App):
         return p
 
     def handle_args(self, args):
+        self.for_each_arg(self.scan_pkt, args)
 
-        for pktfile in args:
-            pkt = fidonet.PacketFactory(open(pktfile))
+    def scan_pkt(self, src, name, ctx):
+        pkt = fidonet.PacketFactory(src)
 
-            print '=' * 70
-            print '%s: ' % pktfile,
-            print pkt
-            print '=' * 70
-            print
+        print '=' * 70
+        print '%s: ' % name,
+        print pkt
+        print '=' * 70
+        print
 
-            if self.opts.show_messages:
-                count = 0
-                while True:
-                    try:
-                        msg = fidonet.MessageFactory(pkt.messages)
-                        print '[%03d]' % count
-                        print msg
-                        print
+        if self.opts.show_messages:
+            count = 0
+            while True:
+                try:
+                    msg = fidonet.MessageFactory(pkt.messages)
+                    print '[%03d]' % count
+                    print msg
+                    print
 
-                        count += 1
-                    except fidonet.EndOfData:
-                        break
+                    count += 1
+                except fidonet.EndOfData:
+                    break
 
 if __name__ == '__main__':
     App.run()
