@@ -21,6 +21,7 @@ class App (fidonet.app.App):
         p.add_option('-o', '--origin', '--orig')
         p.add_option('-d', '--destination', '--dest')
         p.add_option('-T', '--time')
+        p.add_option('-A', '--area')
         p.add_option('--output', '--out')
         p.add_option('--disk', action='store_false',
                 dest='packed')
@@ -69,6 +70,9 @@ class App (fidonet.app.App):
             self.log.debug('set dateTime = %s' % msg.dateTime)
 
         body = msg.body
+
+        if self.opts.area:
+            body.area = self.opts.area
 
         body.klines['INTL'] = ['%(destAddr)s %(origAddr)s' % msg]
         body.klines['PID:'] = [self.logtag]
