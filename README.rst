@@ -41,8 +41,8 @@ Installation
 Author
 ======
 
-Python-ftn was written by Lars Kellogg-Stedman, ``lars@oddbit.com`` or
-Lars @ 1:322/761.
+``Python-ftn`` was written by Lars Kellogg-Stedman, ``lars@oddbit.com`` or
+Lars @ ``1:322/761``.
 
 License
 =======
