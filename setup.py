@@ -25,9 +25,11 @@ setup(name = "fidonet",
                 'ftn-scanmsg = fidonet.apps.scanmsg:App.run',
                 'ftn-editmsg = fidonet.apps.editmsg:App.run',
                 'ftn-makemsg = fidonet.apps.makemsg:App.run',
+                'ftn-querymsg = fidonet.apps.querymsg:App.run',
 
                 'ftn-editpkt = fidonet.apps.editpkt:App.run',
                 'ftn-scanpkt = fidonet.apps.scanpkt:App.run',
+                'ftn-querypkt = fidonet.apps.querypkt:App.run',
 
                 'ftn-indexnl = fidonet.apps.indexnl:App.run',
                 'ftn-route = fidonet.apps.route:App.run',
