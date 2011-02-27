@@ -26,7 +26,7 @@ Availability
 
 Python-ftn is available from:
 
-- http://projects.oddbit.com/python-ftn
+- http://github.com/larsks/python-ftn
 
 Online documentation is available from:
 
