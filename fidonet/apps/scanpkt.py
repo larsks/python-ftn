@@ -37,6 +37,9 @@ class App (fidonet.app.App):
                     print msg
                     print
 
+                    if self.opts.show_message_text:
+                        print msg.body
+
                     count += 1
                 except fidonet.EndOfData:
                     break
