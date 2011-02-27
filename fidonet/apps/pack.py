@@ -37,14 +37,8 @@ class App(fidonet.app.App):
         pkt.destAddr = Address(self.opts.destination)
         pkt.time = time.localtime()
 
-        count = 0
-        for msgfile in args:
-            msg = MessageFactory(open(msgfile))
-            pkt.messages.append(packedmessage.MessageParser.build(msg))
-            count += 1
-            self.log.info('packed message from %s @ %s to %s @ %s' %
-                    (msg.fromUsername, msg.origAddr, msg.toUsername,
-                        msg.destAddr))
+        self.msgcount = 0
+        self.for_each_arg(self.pack_msg, args, ctx=pkt)
 
         if self.opts.output:
             outname = self.opts.output
@@ -57,7 +51,18 @@ class App(fidonet.app.App):
             out = open(outname, 'w')
 
         pkt.write(out)
-        self.log.info('packed %d messages into %s.' % (count, outname))
+        self.log.info('packed %d messages into %s.' % (self.msgcount, outname))
+
+
+    def pack_msg(self, src, name, ctx=None):
+        pkt = ctx
+
+        msg = MessageFactory(src)
+        pkt.messages.append(packedmessage.MessageParser.build(msg))
+        self.msgcount += 1
+        self.log.info('packed message from %s @ %s to %s @ %s' %
+                (msg.fromUsername, msg.origAddr, msg.toUsername,
+                    msg.destAddr))
 
 if __name__ == '__main__':
     App.run()
