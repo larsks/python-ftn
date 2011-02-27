@@ -113,7 +113,7 @@ class App (object):
                 msgbits = bitstring.ConstBitStream(bytes=sys.stdin.read())
                 msgfile = '<stdin>'
             else:
-                msgbits = open(msgfile)
+                msgbits = open(msgfile, 'r+')
 
             func(msgbits, msgfile, ctx=ctx)
 
