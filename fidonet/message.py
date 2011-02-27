@@ -56,6 +56,7 @@ Write a message to an open file using the ``write`` method:
 
 import os
 import sys
+import logging
 
 from ftnerror import *
 from util import *
@@ -130,6 +131,7 @@ class _MessageBodyParser (object):
         body = []
 
         for line in raw.split('\r'):
+            #logging.debug('Got line [%d]: %s' % (state, line))
             if state == 0:
                 state = 1
 
@@ -141,7 +143,7 @@ class _MessageBodyParser (object):
                 if line.startswith('\x01'):
                     self.addKludge(msg, line)
                 elif line.startswith(' * Origin:'):
-                    msg['origin'] = line
+                    msg['origin'] = line[11:]
                     state = 2
                 else:
                     body.append(line)
@@ -172,7 +174,7 @@ class _MessageBodyParser (object):
         lines.extend(msg['body'].split('\n'))
 
         if msg['origin']:
-            lines.append(msg['origin'])
+            lines.append(' * Origin: %s' % msg['origin'])
 
         for seenby in msg['seenby']:
             lines.append('SEEN-BY: %s' % seenby)
