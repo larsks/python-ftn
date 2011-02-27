@@ -42,6 +42,14 @@ Installation
 
   python setup.py install
 
+Reporting bugs
+==============
+
+If you would like to report bugs or make a feature request, please use the
+project issue tracker:
+
+- https://github.com/larsks/python-ftn/issues
+
 Author
 ======
 
