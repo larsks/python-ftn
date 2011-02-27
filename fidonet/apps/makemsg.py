@@ -24,6 +24,7 @@ class App (fidonet.app.App):
         p.add_option('-A', '--area')
         p.add_option('-g', '--flag', action='append',
                 default=[])
+        p.add_option('--originline', '--oline')
         p.add_option('--output', '--out')
         p.add_option('--disk', action='store_false',
                 dest='packed')
@@ -81,6 +82,18 @@ class App (fidonet.app.App):
 
         if self.opts.area:
             body.area = self.opts.area
+
+        # Generate an origin line if this is an echomail post.
+        if not self.opts.originline and self.opts.area:
+            try:
+                self.opts.originline = '%s (%s)' % (
+                        self.cfg.get('fidonet', 'sysname'),
+                        Address(self.cfg.get('fidonet', 'address')))
+            except:
+                pass
+
+        if self.opts.originline:
+            body.origin = self.opts.originline
 
         body.klines['INTL'] = ['%(destAddr)s %(origAddr)s' % msg]
         body.klines['PID:'] = [self.logtag]
