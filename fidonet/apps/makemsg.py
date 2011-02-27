@@ -96,7 +96,7 @@ class App (fidonet.app.App):
             body.origin = self.opts.originline
 
         body.klines['INTL'] = ['%(destAddr)s %(origAddr)s' % msg]
-        body.klines['PID:'] = [self.logtag]
+        body.klines['PID:'] = ['python-ftn']
         body.klines['MSGID:'] = [ '%(origAddr)s ' % msg + '%08x' % self.next_message_id() ]
 
         for k in self.opts.kludge:
