@@ -21,16 +21,16 @@ Python-ftn support FTS-0001 "on disk" and "packed" messages (and can
 convert between them), and supports both FTS-0001 ("type 2") and
 FSC-0048 ("type 2+") packets.
 
-You can download the package from:
+Availability
+============
 
-  http://github.com/larsks/python-ftn
+Python-ftn is available from:
 
-You can find some documentation at:
+- http://projects.oddbit.com/python-ftn
 
-  https://github.com/larsks/python-ftn/wiki
+Online documentation is available from:
 
-Python-ftn is distributed under the terms of the GNU General Public
-License, version 3.
+- https://github.com/larsks/python-ftn/wiki
 
 Examples
 ========
@@ -72,6 +72,8 @@ Examine the generated packet::
 Author
 ======
 
-Python-ftn was written by Lars Kellogg-Stedman, ``lars@oddbit.com`` or
-Lars @ 1:322/761.
+Python-ftn was written by Lars Kellogg-Stedman.
+
+- Fidonet: Lars @ 1:322/761
+- Internet: lars@oddbit.com
 
