@@ -21,6 +21,10 @@ Python-ftn support FTS-0001 "on disk" and "packed" messages (and can
 convert between them), and supports both FTS-0001 ("type 2") and FSC-0048
 ("type 2+") packets.
 
+Documentation is available online at:
+
+- https://github.com/larsks/python-ftn/wiki
+
 Requirements
 ============
 
