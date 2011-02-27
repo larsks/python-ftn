@@ -3,13 +3,13 @@
 import os
 from setuptools import setup, find_packages
 
-setup(name = "fidonet",
+setup(name = "python-ftn",
         version = "2",
         description = "FTN tools for Python",
         long_description=open('README.rst').read(),
         author = "Lars Kellogg-Stedman",
         author_email = "lars@oddbit.com",
-        url = "http://github.com/larsks/fidonet",
+        url = "http://github.com/larsks/python-ftn",
         packages = [
             'fidonet',
             'fidonet.apps',
@@ -17,8 +17,6 @@ setup(name = "fidonet",
             ],
         entry_points = {
             'console_scripts': [
-                'ftn-poll = fidonet.apps.poll:App.run',
-
                 'ftn-pack = fidonet.apps.pack:App.run',
                 'ftn-unpack = fidonet.apps.unpack:App.run',
 
@@ -33,6 +31,7 @@ setup(name = "fidonet",
 
                 'ftn-indexnl = fidonet.apps.indexnl:App.run',
                 'ftn-route = fidonet.apps.route:App.run',
+                'ftn-poll = fidonet.apps.poll:App.run',
                 ],
             },
         install_requires = [
