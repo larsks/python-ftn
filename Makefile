@@ -10,10 +10,9 @@ HTMLDOCS=$(RSTDOCS:.rst=.html)
 all: $(HTMLDOCS)
 
 deploy: all
-	git checkout gh-pages
 	git add $(HTMLDOCS)
-	git ci -m 'Page rendering via Makefile'
-	@echo git push origin gh-pages
+	git ci -m 'Page rendering via Makefile' || true
+	git push origin gh-pages
 
 clean:
 	rm -f $(HTMLDOCS)
