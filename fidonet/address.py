@@ -108,7 +108,7 @@ class Address (object):
                             setattr(self, k, mo.group(k))
                     return
 
-            raise InvalidAddress()
+            raise InvalidAddress(addr)
 
     zone = int_property('zone')
     net = int_property('net')
@@ -162,6 +162,9 @@ class Address (object):
 
     def __str__(self):
         return self.ftn
+
+    def __repr__ (self):
+        return self.__str__()
 
     def __getitem__(self, k):
         if k in self.fields:
