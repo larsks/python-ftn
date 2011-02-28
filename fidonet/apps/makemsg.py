@@ -66,7 +66,7 @@ class App (fidonet.app.App):
             self.log.debug('set originAddr = %s' % msg.origAddr)
         if self.opts.destination:
             msg.destAddr = Address(self.opts.destination)
-            self.log.debug('set destinAddr = %s' % msg.destAddr)
+            self.log.debug('set destAddr = %s' % msg.destAddr)
 
         if self.opts.time:
             msg.dateTime = self.opts.time

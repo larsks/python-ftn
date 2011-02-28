@@ -108,7 +108,7 @@ class Message (Container):
         # control lines.
         if self.get('origPoint', 0) > 0:
             body.klines['FMPT'] = [self.origPoint]
-        if self.get('origPoint', 0) > 0:
+        if self.get('destPoint', 0) > 0:
             body.klines['TOPT'] = [self.destPoint]
 
         self.body = body

@@ -82,7 +82,7 @@ class Address (object):
         self.ftn5d = ftn5d
 
         # defaults
-        self._zone = None
+        self._zone = 0
         self._net = 0
         self._node = 0
         self._point = 0
@@ -107,12 +107,12 @@ class Address (object):
 
     def _ftn(self):
         addr = []
-        if self.get('zone') is not None:
+        if self.get('zone', 0) > 0:
             addr.append('%(zone)s:' % self)
 
         addr.append('%(net)s/%(node)s' % self)
 
-        if self.get('point') is not None:
+        if self.get('point', 0) > 0:
             addr.append('.%(point)s' % self)
 
         if self.ftn5d:
@@ -155,8 +155,11 @@ class Address (object):
         else:
             raise KeyError(k)
 
-    def get(self, k):
-        return getattr(self, k, None)
+    def get(self, k, default=None):
+        try:
+            return getattr(self, k, None)
+        except AttributeError:
+            return default
 
 if __name__ == '__main__':
     a = Address('1:322/761')

@@ -150,15 +150,18 @@ class Struct (object):
         '''Return an empty Container instance corresponding to this
         Struct.'''
 
-        d = self.__factory(self)
+        data = self.__factory(self)
 
         for f in self._fieldlist:
             if callable(f.default):
-                d[f.name] = f.default()
+                data[f.name] = f.default()
             else:
-                d[f.name] = f.default
+                data[f.name] = f.default
 
-        return d
+        if hasattr(data, '__parse__'):
+            data.__parse__()
+
+        return data
 
 class Field (object):
     '''Represents a field in a binary structure.'''
