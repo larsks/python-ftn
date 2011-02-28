@@ -17,3 +17,13 @@ def ftn_address_property(name):
 
     return property(_get, _set)
 
+def commentedfilereader(fd):
+    for line in fd:
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith('#'):
+            continue
+
+        yield line
+
