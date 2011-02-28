@@ -89,17 +89,13 @@ class Message (Container):
         return '\n'.join(text)
 
     def __build__ (self):
-        body = self.body
-
         # unilaterally prefer point addressing in message metadata.
         # and always embed point addressing in message body
         # control lines.
         if self.get('origPoint', 0) > 0:
-            body.klines['FMPT'] = [self.origPoint]
+            self.body.klines['FMPT'] = [self.origPoint]
         if self.get('destPoint', 0) > 0:
-            body.klines['TOPT'] = [self.destPoint]
-
-        self.body = body
+            self.body.klines['TOPT'] = [self.destPoint]
 
         self['attributeWord'] = self['attributeWord'].build()
         self['body'] = self['body'].build()

@@ -105,20 +105,23 @@ class Address (object):
     node = int_property('node')
     point = int_property('point')
 
-    def _ftn(self):
+    def _ftn(self, showPoint=True):
         addr = []
         if self.get('zone', 0) > 0:
             addr.append('%(zone)s:' % self)
 
         addr.append('%(net)s/%(node)s' % self)
 
-        if self.get('point', 0) > 0:
+        if showPoint and self.get('point', 0) > 0:
             addr.append('.%(point)s' % self)
 
         if self.ftn5d:
             addr.append('@%s' % self.ftn_domain)
 
         return ''.join(addr)
+
+    def _pointless(self):
+        return self._ftn(showPoint=False)
 
     def _msg(self):
         return '%(net)s/%(node)s' % self
@@ -142,6 +145,7 @@ class Address (object):
         return '%(net)04x%(node)04x' % self
 
     ftn = property(_ftn)
+    pointless = property(_pointless)
     rfc = property(_rfc)
     hex = property(_hex)
     msg = property(_msg)
