@@ -65,14 +65,6 @@ import odict
 from formats import attributeword
 
 class Message (Container):
-    def _getBody (self):
-        return MessageBodyParser.parse(self['body'])
-
-    def _setBody (self, body):
-        self['body'] = MessageBodyParser.build(body)
-
-    body = property(_getBody, _setBody)
-
     origAddr = ftn_address_property('orig')
     destAddr = ftn_address_property('dest')
 
@@ -110,22 +102,22 @@ class Message (Container):
         self.body = body
 
         self['attributeWord'] = self['attributeWord'].build()
+        self['body'] = self['body'].build()
 
     def __parse__ (self):
-        body = self.body
+        self['body'] = MessageBodyParser.parse(self['body'])
+        self['attributeWord'] = attributeword.AttributeWordParser.parse(self['attributeWord'])
 
         if not 'origPoint' in self:
-            if 'FMPT' in body.klines:
-                self['origPoint'] = body.klines['FMPT'][0]
+            if 'FMPT' in self.body.klines:
+                self['origPoint'] = self.body.klines['FMPT'][0]
             else:
                 self['origPoint'] = 0
         if not 'destPoint' in self:
-            if 'TOPT' in body.klines:
-                self['destPoint'] = body.klines['TOPT'][0]
+            if 'TOPT' in self.body.klines:
+                self['destPoint'] = self.body.klines['TOPT'][0]
             else:
                 self['destPoint'] = 0
-
-        self['attributeWord'] = attributeword.AttributeWordParser.parse(self['attributeWord'])
 
 class MessageBody (Container):
     def __str__(self):
