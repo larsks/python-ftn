@@ -2,8 +2,8 @@
 Pytnon-FTN: API and tools for Fidonet and other FTN networks
 ============================================================
 
-I have put together a suite of tools for manipulating FTN message and
-packet data.  The package currently includes tools for:
+Python-FTN is a set of Python modules that provide the following
+capabilities:
 
 - Generating FTN messages.
 - Editing message data.
