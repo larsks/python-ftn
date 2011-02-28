@@ -32,6 +32,8 @@ You can clone the git_ repository by running::
 
   git clone git://github.com/larsks/python-ftn.git
 
+.. _git: http://git-scm.com/
+
 Documentation
 =============
 
