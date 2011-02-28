@@ -62,15 +62,59 @@ class Container(dict):
         the field defintions.  This allows a wrapper object to extract data
         that otherwise cannot be parsed by the low-level parser.'''
 
+        pass
+
     def __build__ (self):
         '''This method is called by Struct.build() immediately before
         processing all the field definitions.  This allows a wrapper object
         to encode data that otherwse cannot be encoded by the low-level
         parser.'''
 
-class Struct (object):
+        pass
 
-    def __init__ (self, *fields, **kw):
+class Struct (object):
+    '''
+    ``Struct`` represents a binary file format, and provides methods for
+    converting between the binary format and structured data.
+
+    Examples
+    ========
+
+    Creating a new Struct::
+
+      >>> s = Struct('sample',
+      ...   Field('id', 'uint:16'),
+      ...   Boolean('available'),
+      ...   Field('widgetcount', 'uint:8'))
+
+    Parsing binary data::
+
+      >>> s.parse_bytes('\x01\x01\x01\x10')
+      {'available': False, 'widgetcount': 2, 'id': 257}
+
+    Initializing an empty structure::
+
+      >>> new = s.create()
+      >>> new
+      {'available': False, 'widgetcount': 0, 'id': 0}
+
+    Transforming a structure to a BitStream::
+
+      >>> new.id = 123
+      >>> new.available = True
+      >>> new.widgetcount = 15
+      >>> new.build()
+      BitStream('0b0000000001111011100001111')
+
+    Writing a structure out to a file::
+
+      >> import tempfile
+      >> tmp = tempfile.NamedTemporaryFile()
+      >> new.write(tmp)
+
+    '''
+
+    def __init__ (self, name, *fields, **kw):
         '''Create a new Struct instance.
 
         - ``fields`` -- a list of ``Field`` instances that define the data
@@ -80,15 +124,16 @@ class Struct (object):
 
         - ``factory`` -- controls the class return by the ``parse``
           methods.  This should generally be a ``Container`` instance.
+
         '''
 
         self._fields = {}
         self._fieldlist = []
 
         if 'factory' in kw:
-            self.__factory = kw['factory']
+            self._factory = kw['factory']
         else:
-            self.__factory = Container
+            self._factory = Container
 
         for f in fields:
             self._fieldlist.append(f)
@@ -97,7 +142,7 @@ class Struct (object):
     def parse(self, bits):
         '''Parse a binary stream into a structured format.'''
 
-        data = self.__factory(self)
+        data = self._factory(self)
         self.bits = bits
 
         try:
@@ -150,7 +195,7 @@ class Struct (object):
         '''Return an empty Container instance corresponding to this
         Struct.'''
 
-        data = self.__factory(self)
+        data = self._factory(self)
 
         for f in self._fieldlist:
             if callable(f.default):
@@ -188,6 +233,8 @@ class CString(Field):
     '''A NUL-terminated string.'''
 
     def __init__ (self, *args, **kw):
+        if not 'default' in kw:
+            kw['default'] = ''
         super(CString, self).__init__(*args, **kw)
         self.spec = 'bytes, 0x00'
 
@@ -250,4 +297,13 @@ class Constant(Field):
 
     def pack(self, val):
         return super(Constant, self).pack(self.val)
+
+class Boolean(Field):
+    '''A boolean value.'''
+
+    def __init__(self, name, default=False):
+        super(Boolean, self).__init__(name, 'bool', default)
+
+    def pack(self, val):
+        return super(Boolean, self).pack(bool(val))
 
