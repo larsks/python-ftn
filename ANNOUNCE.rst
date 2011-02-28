@@ -26,7 +26,7 @@ Availability
 
 Python-ftn is available from:
 
-- http://projects.oddbit.com/python-ftn
+- http://projects.oddbit.com/python-ftn/
 
 Online documentation is available from:
 
@@ -57,7 +57,7 @@ Create and pack a message for delivery::
 
 Examine the generated packet::
 
-  $ ftn-scanpkt 014202f7.out  -m
+  $ ftn-scanpkt -m 014202f7.out
   ======================================================================
   014202f7.out:  1:322/761 -> 1:322/759 @ 2011-02-26 23:31:59
   ======================================================================
@@ -76,4 +76,7 @@ Python-ftn was written by Lars Kellogg-Stedman.
 
 - Fidonet: Lars @ 1:322/761
 - Internet: lars@oddbit.com
+- Twitter: the_odd_bit
+
+ * Origin: The Odd Bit 1:322/761
 

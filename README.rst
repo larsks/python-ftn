@@ -53,8 +53,14 @@ project issue tracker:
 Author
 ======
 
-``Python-ftn`` was written by Lars Kellogg-Stedman, ``lars@oddbit.com`` or
-Lars @ ``1:322/761``.
+Python-ftn was written by Lars Kellogg-Stedman.
+
+- Fidonet: Lars @ 1:322/761
+- Internet: `lars@oddbit.com`_
+- Twitter: the_odd_bit_
+
+.. _lars@oddbit.com: mailto:lars@oddbit.com
+.. _the_odd_bit: http://www.twitter.com/the_odd_bit
 
 License
 =======
