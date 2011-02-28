@@ -7,9 +7,9 @@ class InvalidPacket (FTNError):
 class InvalidMessage (FTNError):
     pass
 
-class EndOfData (FTNError):
+class InvalidAddress (FTNError):
     pass
 
-class InvalidAddress (FTNError):
+class EndOfData (FTNError):
     pass
 
