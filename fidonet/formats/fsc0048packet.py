@@ -9,7 +9,7 @@ from fidonet.bitparser import *
 from fidonet.util import fixup_packet
 from fidonet.packet import Packet
 
-PacketParser = Struct(
+PacketParser = Struct('packet',
             Field('origNode', 'uintle:16'),
             Field('destNode', 'uintle:16'),
             Field('year', 'uintle:16'),

@@ -6,7 +6,7 @@ packed and on-disk messages.
 
 from fidonet.bitparser import *
 
-AttributeWordParser = Struct(
+AttributeWordParser = Struct('attributeWord',
         Boolean('private'),
         Boolean('crash'),
         Boolean('received'),

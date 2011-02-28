@@ -6,7 +6,7 @@
 from fidonet.bitparser import *
 from fidonet.message import Message
 
-MessageParser = Struct(
+MessageParser = Struct('message',
         PaddedString('fromUsername', 36, '\x00'),
         PaddedString('toUsername', 36, '\x00'),
         PaddedString('subject', 72, '\x00'),
