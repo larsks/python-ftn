@@ -13,8 +13,62 @@ class Router (object):
     '''Select routes for FTN addresses based on the nodelist and a routing
     policy file.
 
-    Examples
-    ========
+    Policy syntax
+    =============
+
+    Router() supports a subset of FrontDoor's routing commands::
+
+      <route-spec> ::= <simple-route-command> <address-list>
+                     | <targeted-to-command> <target-address> <address-list>
+
+      <simple-route-command> ::= 'no-route'
+                               | 'direct'
+                               | 'hub-route'
+                               | 'host-route'
+
+      <targeted-route-command> ::= 'route-to'
+
+      <address-list> ::= <address-or-flag>
+                       | <address-or-flag> ' ' <address-list>
+
+      <address-or-flag> ::= <address-spec> | <flag-spec>
+
+      <address-spec> ::= '*'
+                       | <digit> ':' '*'
+                       | <digit> ':' <digit> '/' '*'
+                       | <digit> ':' <digit> '/' <digit>
+
+      <flag-spec> ::= '@' <flag-name> ':' <address-spec>
+
+      <digit> :== [0-9]+
+
+    Address matching
+    ================
+
+    The router uses glob-style matching for addresses.  This means that
+    while you can do sane things like this this::
+
+      no-route 1:322/*
+
+    You can also do silly things like this:
+
+      no-route 1:3*
+
+    The latter will apply the ``no-route`` policy to anything in a net that
+    starts with ``3``.
+
+    Flag matching
+    =============
+
+    You can limit address matches to nodes that are flying certain flags in
+    the nodelist.  For example, if you want to apply the ``no-route``
+    policy only to nodes capabile of accepting BinkD connections, you might
+    do this::
+
+      no-route @IBN:*
+
+    API Examples
+    ============
 
     Make the nodelist index available::
 
