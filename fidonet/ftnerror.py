@@ -10,6 +10,11 @@ class InvalidMessage (FTNError):
 class InvalidAddress (FTNError):
     pass
 
+class InvalidRoute (FTNError):
+    '''An invalid route specification was encountered in a 
+    route configuration file.'''
+    pass
+
 class EndOfData (FTNError):
     pass
 
