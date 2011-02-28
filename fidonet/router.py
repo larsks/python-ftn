@@ -10,9 +10,36 @@ from fidonet.ftnerror import *
 from fidonet.util import commentedfilereader
 
 class Router (object):
+    '''Select routes for FTN addresses based on the nodelist and a routing
+    policy file.
+
+    Examples
+    ========
+
+    Make the nodelist index available::
+
+      >>> from fidonet import nodelist
+      >>> nodelist.setup_nodelist('sqlite:///tests/nodeindex.db')
+
+    Create a new router::
+
+      >>> router = Router('tests/route.cfg')
+
+    Find the route to 1:322/761::
+
+      >>> router['1:322/761']
+      (1:322/0, ('no-route',))
+
+    Find the route to 2:20/228::
+
+      >>> router['2:20/228']
+      (2:20/0, ('hub-route',))
+
+    '''
+
     def __init__ (self,
             route_file='route.cfg',
-            default='direct'):
+            default='no-route'):
         self.routes = []
         self.default = self.parse_one_line('%s *' % default)
         self.read_route_file(route_file)
@@ -48,11 +75,16 @@ class Router (object):
     def cmd_host_route(self, args):
         return (('host-route',), args)
 
-    def lookup_route(self, addr):
+    def lookup_route(self, addr, node=None):
         route = self.default
 
         for rspec in self.routes:
             for pat in rspec[1]:
+                if pat.startswith('@'):
+                    flag, pat = pat[1:].split(':', 1)
+                    if node and not flag in [x.flag_name for x in
+                            node.flags]:
+                        continue
                 if fnmatch.fnmatch(addr.ftn, pat):
                     route = rspec[0]
 
@@ -60,10 +92,12 @@ class Router (object):
 
     def route(self, addr):
         addr = fidonet.Address(addr)
-        rspec = self.lookup_route(addr)
         session = fidonet.nodelist.broker()
         
         node = session.query(Node).filter(Node.address==addr.ftn).first()
+
+        rspec = self.lookup_route(addr, node)
+
         hub = session.query(Node).filter(Node.net==addr.net).filter(Node.kw=='Hub').first()
         host = session.query(Node).filter(Node.net==addr.net).filter(Node.node==0).first()
 
@@ -71,11 +105,13 @@ class Router (object):
         if action == 'direct':
             return (addr, rspec)
         elif action == 'no-route':
-            if node is None or node['kw'] in ['pvt', 'hold']:
+            if node is None or node.kw in ['pvt', 'hold']:
                 if hub:
                     return (fidonet.Address(hub.address), rspec)
                 elif host:
                     return (fidonet.Address(host.address), rspec)
+            else:
+                return (fidonet.Address(node.address), rspec)
         elif action == 'route-to':
             return (fidonet.Address(rspec[1]), rspec)
         elif action == 'hub-route':
@@ -93,12 +129,13 @@ class Router (object):
         return self.route(addr)
 
 if __name__ == '__main__':
-    fidonet.nodelist.setup_nodelist('sqlite:///nodelist/nodeindex.db')
-
     args = sys.argv[1:]
+
+    fidonet.nodelist.setup_nodelist('sqlite:///%s' % args.pop(0))
     router = Router(args.pop(0))
 
     for addr in args:
         route = router[addr]
-        print addr, route
+        print '%s via %s (using policy %s)' % (
+                addr, route[0], route[1])
 

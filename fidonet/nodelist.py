@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
@@ -30,6 +32,10 @@ class Flag(Base):
 class Node(Base):
     __tablename__ = 'nodes'
 
+    transform = {
+            'kw': lambda x: x.lower()
+            }
+
     id = Column(Integer, primary_key=True)
     kw = Column(String, index=True)
     name = Column(String)
@@ -47,24 +53,32 @@ class Node(Base):
 
     flags = relationship(Flag, backref='node')
 
+    def __str__ (self):
+        return '<Node %s (%s)>' % (self.address, self.name)
+
+    def __repr__ (self):
+        return self.__str__()
+
     def from_nodelist(self, line, addr):
         cols = line.rstrip().split(',')
         if len(cols) < len(fields):
             return
 
         for k,v in (zip(fields, cols[:len(fields)])):
+            if k in self.transform:
+                v = self.transform[k](v)
             setattr(self, k, v)
 
-        if self.kw == 'Zone':
+        if self.kw == 'zone':
             addr.zone = self.node
             addr.region = self.node
             addr.net = self.node
             addr.node = 0
-        elif self.kw == 'Region':
+        elif self.kw == 'region':
             addr.region = self.node
             addr.net = self.node
             addr.node = 0
-        elif self.kw == 'Host':
+        elif self.kw == 'host':
             addr.net = self.node
             addr.node = 0
         else:
@@ -75,6 +89,8 @@ class Node(Base):
         self.net = addr.net
         self.node = addr.node
         self.address = addr.ftn
+
+        logging.debug('parsed node: %s' % self)
 
         flags = cols[len(fields):]
 

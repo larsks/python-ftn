@@ -43,7 +43,8 @@ class App(fidonet.app.App):
 
         self.log.debug('output file is %s' % output)
         self.log.debug('tmp file is %s' % tmp.name)
-        fidonet.nodelist.setup('sqlite:///%s' % tmp.name)
+        fidonet.nodelist.setup_nodelist('sqlite:///%s' % tmp.name,
+                create=True)
         self.session = fidonet.nodelist.broker()
 
         for nodelist in nodelists:
