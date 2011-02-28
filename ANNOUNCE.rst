@@ -17,7 +17,7 @@ packet data.  The package currently includes tools for:
 The python-ftn API makes it easy to develop new tools that interact
 with FTN format data.
 
-Python-ftn support FTS-0001 "on disk" and "packed" messages (and can
+Python-ftn supports FTS-0001 "on disk" and "packed" messages (and can
 convert between them), and supports both FTS-0001 ("type 2") and
 FSC-0048 ("type 2+") packets.
 
