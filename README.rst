@@ -38,7 +38,7 @@ This software requires the following Python modules:
 Installation
 ============
 
-::
+Install this package by running ``setup.py``::
 
   python setup.py install
 
