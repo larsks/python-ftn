@@ -12,7 +12,7 @@ class App (fidonet.app.App):
 
     def create_parser(self):
         p = super(App, self).create_parser()
-        p.add_option('-b', '--show-body', action='store_true')
+        p.add_option('-t', '--show-test', action='store_true')
         return p
 
     def handle_args(self, args):
