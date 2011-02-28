@@ -103,6 +103,18 @@ class Node(Base):
 
             self.flags.append(Flag(flag_name=flag_name, flag_val=flag_val))
 
+class Nodelist (object):
+    def __init__ (self, dburi):
+        self.dburi = dburi
+
+    def setup(self, create=False):
+        self.metadata = Base.metadata
+        self.engine = create_engine(self.dburi)
+
+        if create:
+            self.metadata.create_all(engine)
+
+        self.broker = sessionmaker(bind=engine)
 
 def setup_nodelist(dburi, create=False):
     global metadata
