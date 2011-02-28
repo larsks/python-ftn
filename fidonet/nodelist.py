@@ -88,14 +88,16 @@ class Node(Base):
             self.flags.append(Flag(flag_name=flag_name, flag_val=flag_val))
 
 
-def setup(dburi):
+def setup_nodelist(dburi, create=False):
     global metadata
     global engine
     global broker
 
     metadata = Base.metadata
     engine = create_engine(dburi)
-    metadata.create_all(engine)
+
+    if create:
+        metadata.create_all(engine)
 
     broker = sessionmaker(bind=engine)
 
