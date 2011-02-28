@@ -97,6 +97,10 @@ class Message (Container):
         if self.get('destPoint', 0) > 0:
             self.body.klines['TOPT'] = [self.destPoint]
 
+        self.body.klines['INTL'] = ['%s %s' % (
+            self.destAddr.pointless,
+            self.origAddr.pointless)]
+
         self['attributeWord'] = self['attributeWord'].build()
         self['body'] = self['body'].build()
 
