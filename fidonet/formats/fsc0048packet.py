@@ -40,7 +40,6 @@ PacketParser = Struct(
             BitStream('messages'),
             Constant('eop', 'bytes:2', '\x00\x00'),
 
-            validate=fixup_packet,
             factory=Packet
             )
 

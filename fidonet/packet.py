@@ -97,3 +97,11 @@ class Packet (Container):
 
         return '\n'.join(text)
 
+    def __build__ (self):
+        if 'capWord' in self:
+            self['capWordValidationCopy'] = self['capWord']
+
+        if 'qOrigNode' in self:
+            self['qOrigNode'] = self['origNode']
+            self['qOrigNet'] = self['origNet']
+

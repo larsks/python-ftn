@@ -85,6 +85,7 @@ class Address (object):
         self._zone = None
         self._net = 0
         self._node = 0
+        self._point = 0
 
         for k,v in kw.items():
             if k in self.fields:

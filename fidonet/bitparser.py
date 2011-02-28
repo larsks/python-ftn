@@ -57,6 +57,17 @@ class Container(dict):
         '''Write the binary representation of this object to a file.'''
         return self.__struct__.write(self, fd)
 
+    def __parse__ (self):
+        '''This method is called by Struct.parse() after processing all of
+        the field defintions.  This allows a wrapper object to extract data
+        that otherwise cannot be parsed by the low-level parser.'''
+
+    def __build__ (self):
+        '''This method is called by Struct.build() immediately before
+        processing all the field definitions.  This allows a wrapper object
+        to encode data that otherwse cannot be encoded by the low-level
+        parser.'''
+
 class Struct (object):
 
     def __init__ (self, *fields, **kw):
@@ -69,9 +80,6 @@ class Struct (object):
 
         - ``factory`` -- controls the class return by the ``parse``
           methods.  This should generally be a ``Container`` instance.
-        - ``validate`` -- this function is called immediately before
-          building the binary representation of the Struct.  Use it to
-          check the Struct or impose policy.
         '''
 
         self._fields = {}
@@ -86,9 +94,6 @@ class Struct (object):
             self._fieldlist.append(f)
             self._fields[f.name] = f
 
-        if 'validate' in kw:
-            self._validate = kw['validate']
-
     def parse(self, bits):
         '''Parse a binary stream into a structured format.'''
 
@@ -100,6 +105,9 @@ class Struct (object):
                 data[f.name] = f.unpack(bits)
         except bitstring.errors.ReadError:
             raise EndOfData
+
+        if hasattr(data, '__parse__'):
+            data.__parse__()
 
         return data
 
@@ -118,19 +126,19 @@ class Struct (object):
     def build(self, data):
         '''Transform a structured format into a binrary representation.'''
 
-        bitlist = bitstring.BitStream()
+        bits = bitstring.BitStream()
 
-        if hasattr(self, '_validate'):
-            self._validate(data)
+        if hasattr(data, '__build__'):
+            data.__build__()
 
         for f in self._fieldlist:
             logging.debug('packing field %s as "%s"' % (f.name, f.spec))
             try:
-                bitlist.append(f.pack(data[f.name]))
+                bits.append(f.pack(data[f.name]))
             except KeyError:
-                bitlist.append(f.pack(f.default))
+                bits.append(f.pack(f.default))
 
-        return bitlist
+        return bits
 
     def write(self, data, fd):
         '''Write the binary representation of a structured format to an

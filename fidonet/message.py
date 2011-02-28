@@ -100,6 +100,33 @@ class Message (Container):
         text.append(' '.join(flags))
         return '\n'.join(text)
 
+    def __build__ (self):
+        body = self.body
+
+        # unilaterally prefer point addressing in message metadata.
+        # and always embed point addressing in message body
+        # control lines.
+        if self.get('origPoint', 0) > 0:
+            body.klines['FMPT'] = [self.origPoint]
+        if self.get('origPoint', 0) > 0:
+            body.klines['TOPT'] = [self.destPoint]
+
+        self.body = body
+
+    def __parse__ (self):
+        body = self.body
+
+        if not 'origPoint' in self:
+            if 'FMPT' in body.klines:
+                self['origPoint'] = body.klines['FMPT'][0]
+            else:
+                self['origPoint'] = 0
+        if not 'destPoint' in self:
+            if 'TOPT' in body.klines:
+                self['destPoint'] = body.klines['TOPT'][0]
+            else:
+                self['destPoint'] = 0
+
 class MessageBody (Container):
     def __str__(self):
         return self.build()\
