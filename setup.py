@@ -3,13 +3,16 @@
 import os
 from setuptools import setup, find_packages
 
-setup(name = "python-ftn",
-        version = "2",
-        description = "FTN tools for Python",
+import fidonet
+
+setup(name = 'python-ftn',
+        version = fidonet.__version__,
+        description = 'FTN tools for Python',
         long_description=open('README.rst').read(),
-        author = "Lars Kellogg-Stedman",
-        author_email = "lars@oddbit.com",
-        url = "http://github.com/larsks/python-ftn",
+        license = fidonet.__license__,
+        author = fidonet.__author__,
+        author_email = fidonet.__email__,
+        url = 'http://projects.oddbit.com/python-ftn/',
         packages = [
             'fidonet',
             'fidonet.apps',
