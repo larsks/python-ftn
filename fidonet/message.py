@@ -65,15 +65,6 @@ import odict
 from formats import attributeword
 
 class Message (Container):
-    def _setAW (self, aw):
-        self['attributeWord'] = attributeword.AttributeWordParser.build(aw)
-
-    def _getAW (self):
-        self['attributeWord'].pos = 0
-        return attributeword.AttributeWordParser.parse(self['attributeWord'])
-
-    attributeWord = property(_getAW, _setAW)
-
     def _getBody (self):
         return MessageBodyParser.parse(self['body'])
 
@@ -98,6 +89,11 @@ class Message (Container):
                 flags.append(k.upper())
 
         text.append(' '.join(flags))
+
+        body = self.body
+        if body.area:
+            text.append('Area: %(area)s' % body)
+
         return '\n'.join(text)
 
     def __build__ (self):
@@ -113,6 +109,8 @@ class Message (Container):
 
         self.body = body
 
+        self['attributeWord'] = self['attributeWord'].build()
+
     def __parse__ (self):
         body = self.body
 
@@ -126,6 +124,8 @@ class Message (Container):
                 self['destPoint'] = body.klines['TOPT'][0]
             else:
                 self['destPoint'] = 0
+
+        self['attributeWord'] = attributeword.AttributeWordParser.parse(self['attributeWord'])
 
 class MessageBody (Container):
     def __str__(self):
