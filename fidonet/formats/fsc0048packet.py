@@ -6,7 +6,6 @@ determining which format is appropriate for parsing a given packet.
 '''
 
 from fidonet.bitparser import *
-from fidonet.util import fixup_packet
 from fidonet.packet import Packet
 
 PacketParser = Struct('packet',

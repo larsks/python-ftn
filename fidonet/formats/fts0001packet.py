@@ -6,7 +6,6 @@ format.
 '''
 
 from fidonet.bitparser import *
-from fidonet.util import fixup_packet
 from fidonet.packet import Packet
 
 PacketParser = Struct('packet',
