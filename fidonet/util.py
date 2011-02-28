@@ -6,7 +6,7 @@ def ftn_address_property(name):
         return Address(
                 zone = self.get('%sZone' % name),
                 net = self.get('%sNet' % name),
-                node = self.get('%sNode' % name))
+                node = self.get('%sNode' % name),
                 point = self.get('%sPoint' % name))
 
     def _set(self, addr):
