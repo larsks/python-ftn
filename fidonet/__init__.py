@@ -8,4 +8,5 @@ __version__ = '1.0.0'
 from packetfactory import PacketFactory
 from messagefactory import MessageFactory
 from address import Address
-
+from router import Router
+from nodelist import Nodelist
