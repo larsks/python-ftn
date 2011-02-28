@@ -16,6 +16,7 @@ class App(fidonet.app.App):
         p.add_option('-o', '--origin', '--orig')
         p.add_option('-d', '--destination', '--dest')
         p.add_option('--stdout', action='store_true')
+        p.add_option('-B', '--binkd', action='store_true')
 
         return p
 
@@ -40,6 +41,14 @@ class App(fidonet.app.App):
         self.msgcount = 0
         self.for_each_arg(self.pack_msg, args, ctx=pkt)
 
+        if self.opts.output is None and self.opts.binkd:
+            try:
+                self.opts.output = os.path.join(
+                        self.cfg.get('binkd', 'outb'),
+                        '%s.out' % pkt.destAddr.hex)
+            except:
+                pass
+
         if self.opts.output:
             outname = self.opts.output
             out = open(outname, 'w')
@@ -52,7 +61,6 @@ class App(fidonet.app.App):
 
         pkt.write(out)
         self.log.info('packed %d messages into %s.' % (self.msgcount, outname))
-
 
     def pack_msg(self, src, name, ctx=None):
         pkt = ctx
