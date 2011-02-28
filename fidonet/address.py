@@ -91,14 +91,24 @@ class Address (object):
             if k in self.fields:
                 setattr(self, k, v)
 
-        if addr is not None:
+        if isinstance(addr, Address):
+            self._zone = addr.zone
+            self._net = addr.net
+            self._node = addr.node
+            self._point = addr.point
+        elif addr is not None:
+            self.parse_from_string(addr)
+
+    def parse_from_string(self, addr):
             for x in [ re_ftn_addr, re_rfc_addr ]:
                 mo = x.match(addr)
                 if mo:
                     for k in self.fields:
                         if mo.groupdict().get(k) is not None:
                             setattr(self, k, mo.group(k))
-                    break
+                    return
+
+            raise InvalidAddress()
 
     zone = int_property('zone')
     net = int_property('net')
@@ -126,14 +136,14 @@ class Address (object):
     def _msg(self):
         return '%(net)s/%(node)s' % self
 
-    def _rfc(self):
+    def _rfc(self, showPoint=True):
         addr = []
 
         for field in [ 'zone', 'net', 'node']:
             if self.get(field) is None:
                 raise InvalidAddress()
 
-        if self.get('point') is not None:
+        if showPoint and self.get('point', 0) > 0:
             addr.append('p%(point)s' % self)
 
         addr.append('f%(node)s.n%(net)s.z%(zone)s' % self)
