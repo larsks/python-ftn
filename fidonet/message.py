@@ -38,14 +38,6 @@ You can assign an Address object to this property to update the packet:
     >>> msg.origAddr.ftn
     '1:100/100'
 
-The ``body`` property returns a MessageBody instance:
-
-    >>> b = msg.body
-    >>> b.klines['MSGID:']
-    ['1:322/761 ea6ec1dd']
-    >>> b.area = 'FIDO_UTIL'
-    >>> msg.body = b
-
 Writing a message
 -----------------
 
@@ -82,9 +74,8 @@ class Message (Container):
 
         text.append(' '.join(flags))
 
-        body = self.body
-        if body.area:
-            text.append('Area: %(area)s' % body)
+        if self.body.area:
+            text.append('Area: %(area)s' % self.body)
 
         return '\n'.join(text)
 
@@ -97,6 +88,7 @@ class Message (Container):
         if self.get('destPoint', 0) > 0:
             self.body.klines['TOPT'] = [self.destPoint]
 
+        # Add INTL control line using origin and destination.
         self.body.klines['INTL'] = ['%s %s' % (
             self.destAddr.pointless,
             self.origAddr.pointless)]
@@ -147,10 +139,9 @@ class _MessageBodyParser (object):
         msg = self.create()
 
         state = 0
-        body = []
+        text = []
 
         for line in raw.split('\r'):
-            #logging.debug('Got line [%d]: %s' % (state, line))
             if state == 0:
                 state = 1
 
@@ -165,7 +156,7 @@ class _MessageBodyParser (object):
                     msg['origin'] = line[11:]
                     state = 2
                 else:
-                    body.append(line)
+                    text.append(line)
             elif state == 2:
                 if line.startswith('\x01'):
                     self.addKludge(msg, line)
@@ -176,7 +167,7 @@ class _MessageBodyParser (object):
                 else:
                     raise InvalidMessage('Unexpected: %s'    % line)
 
-        msg['body'] = '\n'.join(body)
+        msg['text'] = '\n'.join(text)
 
         return msg
 
@@ -190,7 +181,7 @@ class _MessageBodyParser (object):
             for v in vv:
                 lines.append('%s%s %s' % (self.kludgePrefix, k,v))
 
-        lines.extend(msg['body'].split('\n'))
+        lines.extend(msg['text'].split('\n'))
 
         if msg['origin']:
             lines.append(' * Origin: %s' % msg['origin'])
