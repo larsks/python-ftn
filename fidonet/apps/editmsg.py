@@ -8,18 +8,12 @@ import fidonet
 import fidonet.app
 import fidonet.message
 
-class App (fidonet.app.App):
+class App (fidonet.app.AppUsingAddresses, fidonet.app.AppUsingNames):
     logtag = 'fidonet.editmsg'
 
     def create_parser(self):
         p = super(App, self).create_parser()
-
-        p.add_option('-t', '--toname', '--to')
-        p.add_option('-f', '--fromname', '--from')
-        p.add_option('-o', '--origin', '--orig')
-        p.add_option('-d', '--destination', '--dest')
         p.add_option('-s', '--subject')
-
         return p
 
     def handle_args(self, args):
@@ -28,12 +22,12 @@ class App (fidonet.app.App):
     def edit_msg(self, src, name, ctx):
         msg = fidonet.MessageFactory(src)
 
-        if self.opts.toname:
+        if self.opts.to_name:
             self.log.debug('setting to = %s' % self.opts.toname)
-            msg.toUsername = self.opts.toname
-        if self.opts.fromname:
-            self.log.debug('setting from = %s' % self.opts.fromname)
-            msg.fromUsername = self.opts.fromname
+            msg.toUsername = self.opts.to_name
+        if self.opts.from_name:
+            self.log.debug('setting from = %s' % self.opts.from_name)
+            msg.fromUsername = self.opts.from_name
         if self.opts.origin:
             addr = fidonet.Address(self.opts.origin)
             self.log.debug('setting origin = %s' % addr)
@@ -49,6 +43,8 @@ class App (fidonet.app.App):
         if self.opts.debug:
             import pprint
             pprint.pprint(msg)
+        else:
+            print msg
 
         if name == '<stdin>':
             msg.write(sys.stdout)

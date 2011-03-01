@@ -7,25 +7,21 @@ import time
 import fidonet
 import fidonet.app
 
-class App (fidonet.app.App):
+class App (fidonet.app.AppUsingAddresses):
     logtag = 'fidonet.editpkt'
 
     def create_parser(self):
         p = super(App, self).create_parser()
-
-        p.add_option('-o', '--origin', '--orig')
-        p.add_option('-d', '--destination', '--dest')
         p.add_option('-t', '--time',
                 help='Set the time in the packet, specified as "YYYY-mm-dd HH:MM:SS"')
         p.add_option('--capword')
         p.add_option('--productdata')
-
         return p
 
     def handle_args(self, args):
 
         for pktfile in args:
-            self.log.info('Editing %s.' % pktfile)
+            self.log.info('editing %s' % pktfile)
             fd = open(pktfile, 'r+')
             pkt = fidonet.PacketFactory(fd)
 
@@ -48,7 +44,7 @@ class App (fidonet.app.App):
 
             fd.seek(0)
             pkt.write(fd)
-            self.log.info('Wrote edits to %s.' % pktfile)
+            self.log.info('wrote edits to %s' % pktfile)
             fd.close()
 
 if __name__ == '__main__':

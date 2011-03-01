@@ -8,7 +8,7 @@ from fidonet import Address
 from fidonet.formats import *
 import fidonet.app
 
-class App (fidonet.app.App):
+class App (fidonet.app.AppUsingAddresses, fidonet.app.AppUsingNames):
     logtag = 'fidonet.makemsg'
 
     def create_parser(self):
@@ -16,10 +16,6 @@ class App (fidonet.app.App):
 
         p.add_option('-k', '--kludge', action='append', default=[])
         p.add_option('-s', '--subject')
-        p.add_option('-f', '--fromuser', '--from')
-        p.add_option('-t', '--touser', '--to')
-        p.add_option('-o', '--origin', '--orig')
-        p.add_option('-d', '--destination', '--dest')
         p.add_option('-T', '--time')
         p.add_option('-A', '--area')
         p.add_option('-g', '--flag', action='append',
@@ -51,11 +47,11 @@ class App (fidonet.app.App):
         if not self.opts.time:
             self.opts.time = time.strftime('%d %b %y  %H:%M:%S', time.localtime())
 
-        if self.opts.fromuser:
-            msg.fromUsername = self.opts.fromuser
+        if self.opts.from_name:
+            msg.fromUsername = self.opts.from_name
             self.log.debug('set fromUsername = %s' % msg.fromUsername)
-        if self.opts.touser:
-            msg.toUsername = self.opts.touser
+        if self.opts.to_name:
+            msg.toUsername = self.opts.to_name
             self.log.debug('set toUsername = %s' % msg.toUsername)
         if self.opts.subject:
             msg.subject = self.opts.subject
