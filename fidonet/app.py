@@ -6,6 +6,8 @@ import ConfigParser
 
 import bitstring
 
+from fidonet import defaults
+
 class App (object):
     logtag = 'fidonet'
 
@@ -19,11 +21,12 @@ class App (object):
 
         parser = self.create_parser()
         opts, args = parser.parse_args()
-        cfg = self.create_config()
 
         self.opts = opts
-        self.cfg = cfg
         self.parser = parser
+
+        self.defaults = self.set_defaults()
+        self.cfg = self.create_config()
 
         self.read_config()
         self.setup_logging()
@@ -47,17 +50,22 @@ class App (object):
     def create_parser(self):
         p = optparse.OptionParser()
 
-        p.add_option('-F', '--config',
-                default=os.environ.get('FTN_CONFIG_FILE', os.path.join(
-                    os.environ.get('FTN_CONFIG_DIR', '.'), 'fidonet.cfg')),
-                help='Path to main configuration file')
-        p.add_option('-V', '--verbose',
+        p.add_option('--config', '--cf',
+                default=defaults.ftn_config_file,
+                help='Path to main configuration file.')
+        p.add_option('--config-dir',
+                default=defaults.ftn_config_dir,
+                help='Find configuration files in this directory.')
+        p.add_option('--data-dir',
+                default=defaults.ftn_data_dir,
+                help='Find data files in this directory.'),
+        p.add_option('-v', '--verbose',
                 action='store_true',
                 help='Enable addtional logging.')
         p.add_option('--debug',
                 action='store_true',
                 help='Turn on debugging output.')
-        p.add_option('-O', '--option',
+        p.add_option('--option',
                 action='append',
                 default=[],
                 help='Set configuration options on the command line.')
@@ -67,8 +75,17 @@ class App (object):
 
         return p
 
+    def set_defaults(self):
+        defaults = {
+                'nodelist': os.path.join(self.opts.data_dir, 'nl.d',
+                    'nodelist'),
+                'routes': os.path.join(self.opts.config_dir, 'route.cfg')
+                }
+
+        return defaults
+
     def create_config(self):
-        cfg = ConfigParser.ConfigParser()
+        cfg = ConfigParser.ConfigParser(self.defaults)
         return cfg
 
     def read_config(self):
@@ -101,6 +118,12 @@ class App (object):
         self.log.debug('set umask to %04o.' % umask)
         os.umask(umask)
 
+    def get(self, section, option, default=None):
+        try:
+            return self.cfg.get(section, option)
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            return default
+
     def handle_args(self, args):
         pass
 
@@ -116,6 +139,42 @@ class App (object):
                 msgbits = open(msgfile, 'r+')
 
             func(msgbits, msgfile, ctx=ctx)
+
+class AppUsingFiles (App):
+
+    def create_parser(self):
+        p = super(AppUsingFiles, self).create_parser()
+        p.add_option('-O', '--output', '--out',
+                metavar='FILE',
+                help='Send output to FILE.')
+        p.add_option('-D', '--destdir', '--dir',
+                metavar='DIR',
+                help='Place output files in DIR.')
+        return p
+
+class AppUsingAddresses (App):
+
+    def create_parser(self):
+        p = super(AppUsingAddresses, self).create_parser()
+        p.add_option('-o', '--origin', '--orig',
+                metavar='ADDRESS',
+                help='Set origin address to ADDRESS.')
+        p.add_option('-d', '--destination', '--dest',
+                metavar='ADDRESS',
+                help='Set destination address to ADDRESS.')
+        return p
+
+class AppUsingNames (App):
+
+    def create_parser(self):
+        p = super(AppUsingNames, self).create_parser()
+        p.add_option('-f', '--from-name', '--from',
+                metavar='NAME',
+                help='Set sender name to NAME.')
+        p.add_option('-t', '--to-name', '--to',
+                metavar='NAME',
+                help='Set recipient name to NAME.')
+        return p
 
 if __name__ == '__main__':
     App.run()
