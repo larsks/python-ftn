@@ -5,18 +5,17 @@ import errno
 
 import fidonet
 import fidonet.app
-import fidonet.nodelist
+from fidonet.nodelist import Nodelist, Node
 
-class App(fidonet.app.App):
+class App(fidonet.app.AppUsingFiles):
     logtag = 'fidonet.indexnl'
-
-    def create_parser(self):
-        p = super(App, self).create_parser()
-        p.add_option('-o', '--output')
-        return p
 
     def handle_args(self, args):
         nodelists = []
+
+        if self.opts.output is None:
+            nl_base_path = self.cfg.get('fidonet', 'nodelist').split()[0]
+            self.opts.output = '%s.idx' % nl_base_path
 
         for nl_base_path in self.cfg.get('fidonet', 'nodelist').split():
             if os.path.exists(nl_base_path):
@@ -32,25 +31,21 @@ class App(fidonet.app.App):
         self.build_index(nodelists)
 
     def build_index(self, nodelists):
-        if self.opts.output:
-            output = self.opts.output
-        else:
-            output = os.path.join(
-                    os.path.dirname(nodelists[0]),
-                    'nodeindex.db')
-            tmp = tempfile.NamedTemporaryFile(
-                    dir=os.path.dirname(output))
+        tmp = tempfile.NamedTemporaryFile(
+                dir=os.path.dirname(self.opts.output))
 
-        self.log.debug('output file is %s' % output)
+        self.log.debug('output file is %s' % self.opts.output)
         self.log.debug('tmp file is %s' % tmp.name)
-        fidonet.nodelist.setup_nodelist('sqlite:///%s' % tmp.name,
-                create=True)
-        self.session = fidonet.nodelist.broker()
+
+        nl = Nodelist('sqlite:///%s' % tmp.name)
+        nl.setup(create=True)
+        session = nl.broker()
 
         for nodelist in nodelists:
-            self.index_one_nodelist(nodelist)
+            self.index_one_nodelist(session, nodelist)
 
-        os.rename(tmp.name, output)
+        self.log.info('creating nodelist index %s' % self.opts.output)
+        os.rename(tmp.name, self.opts.output)
 
         try:
             tmp.close()
@@ -60,7 +55,7 @@ class App(fidonet.app.App):
             else:
                 raise
 
-    def index_one_nodelist(self, nodelist):
+    def index_one_nodelist(self, session, nodelist):
         addr = fidonet.Address()
 
         self.log.info('indexing %s' % nodelist)
@@ -75,9 +70,10 @@ class App(fidonet.app.App):
             if node.node is None:
                 continue
 
-            self.session.add(node)
+            session.add(node)
 
-        self.session.commit()
+        self.log.debug('committing changes')
+        session.commit()
 
 if __name__ == '__main__':
     App.run()

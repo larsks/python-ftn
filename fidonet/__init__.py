@@ -9,4 +9,3 @@ from packetfactory import PacketFactory
 from messagefactory import MessageFactory
 from address import Address
 from router import Router
-from nodelist import Nodelist
