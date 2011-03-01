@@ -133,7 +133,7 @@ class App (object):
 
         for msgfile in args:
             if msgfile == '-':
-                msgbits = bitstring.ConstBitStream(bytes=sys.stdin.read())
+                msgbits = bitstring.BitStream(bytes=sys.stdin.read())
                 msgfile = '<stdin>'
             else:
                 msgbits = open(msgfile, 'r+')

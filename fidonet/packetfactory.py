@@ -10,7 +10,7 @@ def PacketFactory(src):
     if isinstance(src, bitstring.ConstBitArray):
         bits = src
     elif hasattr(src, 'read'):
-        bits = bitstring.ConstBitStream(src)
+        bits = bitstring.BitStream(src)
     else:
         raise InvalidPacket()
 

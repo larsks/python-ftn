@@ -159,13 +159,13 @@ class Struct (object):
     def parse_fd(self, fd):
         '''Parse binary data from an open file into a structured format.'''
 
-        bits = bitstring.ConstBitStream(fd)
+        bits = bitstring.BitStream(fd)
         return self.parse(bits)
 
     def parse_bytes(self, bytes):
         '''Parse a sequence of bytes into a structued format.'''
 
-        bits = bitstring.ConstBitStream(bytes=bytes)
+        bits = bitstring.BitStream(bytes=bytes)
         return self.parse(bits)
 
     def build(self, data):
