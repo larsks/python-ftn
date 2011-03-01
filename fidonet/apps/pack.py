@@ -6,25 +6,19 @@ from fidonet import Address, MessageFactory
 from fidonet.formats import *
 import fidonet.app
 
-class App(fidonet.app.App):
+class App(fidonet.app.AppUsingFiles, fidonet.app.AppUsingAddresses):
     logtag = 'fidonet.pack'
 
     def create_parser(self):
         p = super(App, self).create_parser()
-
-        p.add_option('--output', '--out')
-        p.add_option('-o', '--origin', '--orig')
-        p.add_option('-d', '--destination', '--dest')
         p.add_option('--stdout', action='store_true')
         p.add_option('-B', '--binkd', action='store_true')
-
         return p
 
     def handle_args (self, args):
         if not self.opts.origin:
-            try:
-                self.opts.origin = self.cfg.get('fidonet', 'address')
-            except Exception, detail:
+            self.opts.origin = self.get('fidonet', 'address')
+            if self.opts.origin is None:
                 self.log.error('Missing origin address.')
                 sys.exit(1)
 
@@ -41,13 +35,14 @@ class App(fidonet.app.App):
         self.msgcount = 0
         self.for_each_arg(self.pack_msg, args, ctx=pkt)
 
-        if self.opts.output is None and self.opts.binkd:
+        if self.opts.binkd and not self.opts.destdir:
             try:
-                self.opts.output = os.path.join(
-                        self.cfg.get('binkd', 'outb'),
-                        '%s.out' % pkt.destAddr.hex)
+                self.opts.destdir = self.cfg.get('binkd', 'outbound')
             except:
-                pass
+                self.log.error('unable to determine binkd outbound directory')
+                sys.exit(1)
+        elif not self.opts.destdir:
+            self.opts.destdir = '.'
 
         if self.opts.output:
             outname = self.opts.output
@@ -56,7 +51,8 @@ class App(fidonet.app.App):
             outname = '<stdout>'
             out = sys.stdout
         else:
-            outname = '%s.out' % pkt.destAddr.hex
+            outname = os.path.join(self.opts.destdir, '%s.out' %
+                    pkt.destAddr.hex)
             out = open(outname, 'w')
 
         pkt.write(out)
