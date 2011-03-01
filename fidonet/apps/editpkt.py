@@ -19,33 +19,34 @@ class App (fidonet.app.AppUsingAddresses):
         return p
 
     def handle_args(self, args):
+        self.for_each_arg(self.edit_pkt, args)
 
-        for pktfile in args:
-            self.log.info('editing %s' % pktfile)
-            fd = open(pktfile, 'r+')
-            pkt = fidonet.PacketFactory(fd)
+    def edit_pkt(self, src, name, ctx):
+        pkt = fidonet.PacketFactory(src)
 
-            if self.opts.origin:
-                pkt.origAddr = fidonet.Address(self.opts.origin)
-                self.log.debug('set origAddr = %s' % pkt.origAddr)
-            if self.opts.destination:
-                pkt.destAddr = fidonet.Address(self.opts.destination)
-                self.log.debug('set destAddr = %s' % pkt.destAddr)
-            if self.opts.time:
-                t = time.strptime(self.opts.time, '%Y-%m-%d %H:%M:%S')
-                pkt.time = t
-                self.log.debug('set time = %s' % time.strftime(
-                    '%Y-%m-%d %H:%M:%S', t))
-            if self.opts.capword:
-                pkt.capWord = int(self.opts.capword)
-                self.log.debug('set capword = %d' % pkt.capWord)
+        if self.opts.origin:
+            pkt.origAddr = fidonet.Address(self.opts.origin)
+            self.log.debug('set origAddr = %s' % pkt.origAddr)
+        if self.opts.destination:
+            pkt.destAddr = fidonet.Address(self.opts.destination)
+            self.log.debug('set destAddr = %s' % pkt.destAddr)
+        if self.opts.time:
+            t = time.strptime(self.opts.time, '%Y-%m-%d %H:%M:%S')
+            pkt.time = t
+            self.log.debug('set time = %s' % time.strftime(
+                '%Y-%m-%d %H:%M:%S', t))
+        if self.opts.capword:
+            pkt.capWord = int(self.opts.capword)
+            self.log.debug('set capword = %d' % pkt.capWord)
 
-            print pkt
-
+        if name == '<stdin>':
+            pkt.write(sys.stdout)
+        else:
             fd.seek(0)
             pkt.write(fd)
-            self.log.info('wrote edits to %s' % pktfile)
             fd.close()
+
+        self.log.info('wrote edits to %s' % name)
 
 if __name__ == '__main__':
     App.run()
