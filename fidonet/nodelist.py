@@ -62,6 +62,7 @@ class Node(Base):
     def from_nodelist(self, line, addr):
         cols = line.rstrip().split(',')
         if len(cols) < len(fields):
+            logging.debug('skipping invalid line:', line)
             return
 
         for k,v in (zip(fields, cols[:len(fields)])):
@@ -70,15 +71,18 @@ class Node(Base):
             setattr(self, k, v)
 
         if self.kw == 'zone':
+            logging.debug('start zone %s' % self.node)
             addr.zone = self.node
             addr.region = self.node
             addr.net = self.node
             addr.node = 0
         elif self.kw == 'region':
+            logging.debug('start region %s' % self.node)
             addr.region = self.node
             addr.net = self.node
             addr.node = 0
         elif self.kw == 'host':
+            logging.debug('start net %s' % self.node)
             addr.net = self.node
             addr.node = 0
         else:
@@ -112,20 +116,7 @@ class Nodelist (object):
         self.engine = create_engine(self.dburi)
 
         if create:
-            self.metadata.create_all(engine)
+            self.metadata.create_all(self.engine)
 
-        self.broker = sessionmaker(bind=engine)
-
-def setup_nodelist(dburi, create=False):
-    global metadata
-    global engine
-    global broker
-
-    metadata = Base.metadata
-    engine = create_engine(dburi)
-
-    if create:
-        metadata.create_all(engine)
-
-    broker = sessionmaker(bind=engine)
+        self.broker = sessionmaker(bind=self.engine)
 

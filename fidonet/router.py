@@ -72,17 +72,18 @@ class Router (object):
 
     Make the nodelist index available::
 
-      >>> from fidonet import nodelist
-      >>> nodelist.setup_nodelist('sqlite:///tests/nodeindex.db')
+      >>> from fidonet.nodelist import Nodelist
+      >>> nl = Nodelist('sqlite:///nl.d/nodelist.idx')
+      >>> nl.setup()
 
     Create a new router::
 
-      >>> router = Router('tests/route.cfg')
+      >>> router = Router(nl, 'route.cfg')
 
     Find the route to 1:322/761::
 
       >>> router['1:322/761']
-      (1:322/0, ('no-route',))
+      (1:322/761, ('no-route',))
 
     Find the route to 2:20/228::
 
@@ -92,8 +93,10 @@ class Router (object):
     '''
 
     def __init__ (self,
+            nodelist,
             route_file='route.cfg',
             default='no-route'):
+        self.nodelist = nodelist
         self.routes = []
         self.default = self.parse_one_line('%s *' % default)
         self.read_route_file(route_file)
@@ -133,27 +136,44 @@ class Router (object):
         route = self.default
 
         for rspec in self.routes:
+            logging.debug('check %s against %s' % (addr, rspec))
             for pat in rspec[1]:
                 if pat.startswith('@'):
                     flag, pat = pat[1:].split(':', 1)
-                    if node and not flag in [x.flag_name for x in
+
+                    if node is None:
+                        continue
+                    elif node and not flag in [x.flag_name for x in
                             node.flags]:
                         continue
+
+                    logging.debug('flag match on %s for %s' % (flag, addr))
                 if fnmatch.fnmatch(addr.ftn, pat):
+                    logging.debug('matched %s, pat=%s' % (addr, pat))
                     route = rspec[0]
 
         return route
 
     def route(self, addr):
         addr = fidonet.Address(addr)
-        session = fidonet.nodelist.broker()
+        session = self.nodelist.broker()
         
         node = session.query(Node).filter(Node.address==addr.ftn).first()
+        logging.debug('found node = %s' % node)
 
         rspec = self.lookup_route(addr, node)
 
-        hub = session.query(Node).filter(Node.net==addr.net).filter(Node.kw=='Hub').first()
-        host = session.query(Node).filter(Node.net==addr.net).filter(Node.node==0).first()
+        hub = session.query(Node)\
+                .filter(Node.zone==addr.zone)\
+                .filter(Node.net==addr.net)\
+                .filter(Node.kw=='Hub').first()
+        host = session.query(Node)\
+                .filter(Node.zone==addr.zone)\
+                .filter(Node.net==addr.net)\
+                .filter(Node.node=='0').first()
+
+        logging.debug('found hub = %s' % hub)
+        logging.debug('found host = %s' % host)
 
         action = rspec[0]
         if action == 'direct':
@@ -181,15 +201,4 @@ class Router (object):
 
     def __getitem__ (self, addr):
         return self.route(addr)
-
-if __name__ == '__main__':
-    args = sys.argv[1:]
-
-    fidonet.nodelist.setup_nodelist('sqlite:///%s' % args.pop(0))
-    router = Router(args.pop(0))
-
-    for addr in args:
-        route = router[addr]
-        print '%s via %s (using policy %s)' % (
-                addr, route[0], route[1])
 
