@@ -50,6 +50,7 @@ import os
 import sys
 import logging
 
+import fidonet
 from ftnerror import *
 from util import *
 from bitparser import Container
@@ -110,6 +111,16 @@ class Message (Container):
                 self['destPoint'] = self.body.klines['TOPT'][0]
             else:
                 self['destPoint'] = 0
+
+        if not 'origZone' in self:
+            self['origZone'] = 0
+        if not 'destZone' in self:
+            self['destZone'] = 0
+
+        if 'INTL' in self.body.klines:
+            intlDest, intlOrig = self.body.klines['INTL'][0].split()
+            self.destAddr = fidonet.Address(intlDest)
+            self.origAddr = fidonet.Address(intlOrig)
 
 class MessageBody (Container):
     def __str__(self):
