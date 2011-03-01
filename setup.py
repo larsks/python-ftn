@@ -22,6 +22,7 @@ setup(name = 'python-ftn',
             'console_scripts': [
                 'ftn-pack = fidonet.apps.pack:App.run',
                 'ftn-unpack = fidonet.apps.unpack:App.run',
+                'ftn-toss = fidonet.apps.toss:App.run',
 
                 'ftn-scanmsg = fidonet.apps.scanmsg:App.run',
                 'ftn-editmsg = fidonet.apps.editmsg:App.run',
