@@ -21,12 +21,12 @@ class Router (object):
       <route-spec> ::= <simple-route-command> <address-list>
                      | <targeted-to-command> <target-address> <address-list>
 
-      <simple-route-command> ::= 'no-route'
-                               | 'direct'
-                               | 'hub-route'
-                               | 'host-route'
+      <simple-route-command> ::= 'NO-ROUTE'
+                               | 'DIRECT'
+                               | 'HUB-ROUTE'
+                               | 'HOST-ROUTE'
 
-      <targeted-route-command> ::= 'route-to'
+      <targeted-route-command> ::= 'ROUTE-TO'
 
       <address-list> ::= <address-or-flag>
                        | <address-or-flag> ' ' <address-list>
@@ -42,11 +42,40 @@ class Router (object):
 
       <digit> :== [0-9]+
 
+    DIRECT
+    ------
+
+    Route the packet directly to a node.
+
+    HOST-ROUTE
+    ----------
+
+    Route packets to the network host.  This simply replaces the node
+    number with ``0`` (so 1:322/761 would get routed to 1:322/0).
+
+    HUB-ROUTE
+    ---------
+
+    Route packets to a network hub, if available, otherwise behaves like
+    ``HOST-ROUTE``.
+
+    NO-ROUTE
+    --------
+
+    Like ``DIRECT``, unless the node is marked ``Hold`` or ``Pvt`` in the
+    node list, in which case it acts like ``HUB-ROUTE``.  This is the
+    default behavior absent any other configuration.
+
+    ROUTE-TO
+    --------
+
+    Route packets to the specified target node.
+
     Address matching
     ================
 
     The router uses glob-style matching for addresses.  This means that
-    while you can do sane things like this this::
+    while you can do sane things like this::
 
       no-route 1:322/*
 
@@ -66,6 +95,11 @@ class Router (object):
     do this::
 
       no-route @IBN:*
+
+    You can combine flags and address patterns.  To apply the ``direct``
+    policy to nodes in 1:322/* flying the ``IBN`` flag::
+
+      direct @IBN:1:322/*
 
     API Examples
     ============
@@ -104,7 +138,7 @@ class Router (object):
     def parse_one_line(self, line):
         cmd, args = line.split(None, 1)
         args = args.split()
-        cmd = cmd.replace('-', '_')
+        cmd = cmd.replace('-', '_').lower()
 
         if hasattr(self, 'cmd_%s' % cmd):
             return getattr(self, 'cmd_%s' % cmd)(args)
