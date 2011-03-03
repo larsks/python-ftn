@@ -20,10 +20,15 @@ class App (fidonet.app.App):
             nodelist = self.cfg.get('fidonet', 'nodelist').split()[0]
             self.opts.nodelist = '%s.idx' % nodelist
         if self.opts.routes is None:
-            self.opts.routes = self.cfg.get('fidonet', 'routes')
+            try:
+                self.opts.routes = self.cfg.get('fidonet', 'routes')
+            except:
+                pass
 
         self.log.info('using nodelist %s' % self.opts.nodelist)
-        self.log.info('using routes from %s' % self.opts.routes)
+
+        if self.opts.routes:
+            self.log.info('using routes from %s' % self.opts.routes)
 
         nl = Nodelist('sqlite:///%s' % self.opts.nodelist)
         nl.setup()
