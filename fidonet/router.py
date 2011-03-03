@@ -45,7 +45,8 @@ class Router (object):
     DIRECT
     ------
 
-    Route the packet directly to a node.
+    Route the packet directly to a node.  This is the default behavior
+    absent any other configuration.
 
     HOST-ROUTE
     ----------
@@ -63,8 +64,7 @@ class Router (object):
     --------
 
     Like ``DIRECT``, unless the node is marked ``Hold`` or ``Pvt`` in the
-    node list, in which case it acts like ``HUB-ROUTE``.  This is the
-    default behavior absent any other configuration.
+    node list, in which case it acts like ``HUB-ROUTE``.
 
     ROUTE-TO
     --------
@@ -129,10 +129,10 @@ class Router (object):
     def __init__ (self,
             nodelist,
             route_file=None,
-            default='no-route'):
+            default='direct'):
         self.nodelist = nodelist
         self.routes = []
-        self.default = self.parse_one_line('%s *' % default)
+        self.default = self.parse_one_line('%s *' % default)[0]
 
         if route_file is not None:
             self.read_route_file(route_file)
@@ -171,9 +171,6 @@ class Router (object):
     def lookup_route(self, addr, node=None):
         route = self.default
 
-        logging.debug('finding route for %s (default = %s)' % (addr,
-            route))
-
         for rspec in self.routes:
             logging.debug('check %s against %s' % (addr, rspec))
             for pat in rspec[1]:
@@ -191,6 +188,7 @@ class Router (object):
                     logging.debug('matched %s, pat=%s' % (addr, pat))
                     route = rspec[0]
 
+        logging.debug('got route spec = %s' % str(route))
         return route
 
     def route(self, addr):
@@ -201,6 +199,15 @@ class Router (object):
         logging.debug('found node = %s' % node)
 
         rspec = self.lookup_route(addr, node)
+
+        action = rspec[0]
+        logging.debug('route spec gives action = %s' % repr(action))
+        if action == 'direct':
+            # no nodelists lookups required for direct routing.
+            return (addr, rspec)
+        elif action == 'route-to':
+            # ...or for route-to, either.
+            return (fidonet.Address(rspec[1]), rspec)
 
         hub = session.query(Node)\
                 .filter(Node.zone==addr.zone)\
@@ -214,10 +221,7 @@ class Router (object):
         logging.debug('found hub = %s' % hub)
         logging.debug('found host = %s' % host)
 
-        action = rspec[0]
-        if action == 'direct':
-            return (addr, rspec)
-        elif action == 'no-route':
+        if action == 'no-route':
             if node is None or node.kw in ['pvt', 'hold']:
                 if hub:
                     return (fidonet.Address(hub.address), rspec)
@@ -225,8 +229,6 @@ class Router (object):
                     return (fidonet.Address(host.address), rspec)
             else:
                 return (fidonet.Address(node.address), rspec)
-        elif action == 'route-to':
-            return (fidonet.Address(rspec[1]), rspec)
         elif action == 'hub-route':
             if hub:
                 return (fidonet.Address(hub.address), rspec)
