@@ -42,6 +42,21 @@ Install this package by running ``setup.py``::
 
   python setup.py install
 
+Configuration
+=============
+
+Many of the tools in this package read configuration information from a
+file named ``ftn.cfg``, which is by default found in ``/etc/ftn/ftn.cfg``.
+You can change this default in the following ways:
+
+- Use the ``-f`` command line option to provide an explicit path to a
+  configuration file.
+- Set the ``FTN_CONFIG_DIR`` environment variable.  The python-ftn tools
+  will look in this directory for ``ftn.cfg`` and other config files.
+- Set the ``FTN_CONFIG_FILE`` environment variable.  The python-ftn tools
+  will use this file, but continue to look for other files in
+  ``FTN_CONFIG_DIR`` or ``/etc/ftn``.
+
 Reporting bugs
 ==============
 
