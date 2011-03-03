@@ -1,8 +1,12 @@
+import re
 import logging
 
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
+
+re_ip_in_phone = re.compile('000*-(\d+-\d+-\d+-\d+)')
+re_hostname = re.compile('\w+\.\w+\.\w+')
 
 fields = (
         'kw',
@@ -53,11 +57,42 @@ class Node(Base):
 
     flags = relationship(Flag, backref='node')
 
-    def __str__ (self):
+    def __repr__ (self):
         return '<Node %s (%s)>' % (self.address, self.name)
 
-    def __repr__ (self):
-        return self.__str__()
+    def __str__ (self):
+        return self.__repr__()
+
+    def inet(self, for_flag=None):
+        '''Attempt to return the IP address or hostname for this
+        node.  If you specify for_flag, look for a service specific address
+        first.'''
+
+        ip = None
+
+        for flag in self.flags:
+            if flag.flag_name == for_flag and flag.flag_val is not None:
+                ip = flag.flag_val
+                break
+            elif flag.flag_name == 'IP':
+                ip = flag.flag_val
+            elif flag.flag_name == 'INA':
+                ip = flag.flag_val
+
+        if ip is not None:
+            return ip
+
+        # Is this FTSC?
+        mo = re_ip_in_phone.match(self.phone)
+        if mo:
+            return mo.group(1).replace('-', '.')
+
+        mo = re_hostname.match(self.name)
+        if mo:
+            return self.name
+
+    def to_nodelist(self):
+        return ','.join([str(getattr(self, x)) for x in fields])
 
     def from_nodelist(self, line, addr):
         cols = line.rstrip().split(',')
