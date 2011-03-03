@@ -123,6 +123,34 @@ class App (object):
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             return default
 
+    def relpath(self, path, dir):
+        if path.startswith('/'):
+            return path
+        else:
+            return os.path.join(dir, path)
+
+    def get_cfg_path(self, section, option, default=None):
+        try:
+            path = self.cfg.get(section, option)
+            return self.relpath(path, self.opts.config_dir)
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            return default
+
+    def get_cfg_paths(self, section, option, default=''):
+        for path in self.get(section, option, default).split():
+            yield self.relpath(path, self.opts.config_dir)
+
+    def get_data_path(self, section, option, default=None):
+        try:
+            path = self.cfg.get(section, option)
+            return self.relpath(path, self.opts.data_dir)
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            return default
+
+    def get_data_paths(self, section, option, default=''):
+        for path in self.get(section, option, default).split():
+            yield self.relpath(path, self.opts.data_dir)
+
     def handle_args(self, args):
         pass
 
@@ -176,5 +204,7 @@ class AppUsingNames (App):
         return p
 
 if __name__ == '__main__':
-    App.run()
+    a = App()
+    a.main()
+
 
