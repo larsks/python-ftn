@@ -17,13 +17,11 @@ class App (fidonet.app.App):
 
     def handle_args(self, args):
         if self.opts.nodelist is None:
-            nodelist = self.cfg.get('fidonet', 'nodelist').split()[0]
-            self.opts.nodelist = '%s.idx' % nodelist
+            self.opts.nodelist = '%s.idx' % self.get_data_paths(
+                    'fidonet', 'nodelist').next()
         if self.opts.routes is None:
-            try:
-                self.opts.routes = self.cfg.get('fidonet', 'routes')
-            except:
-                pass
+            self.opts.routes = self.get_cfg_path(
+                    'fidonet', 'routes')
 
         self.log.info('using nodelist %s' % self.opts.nodelist)
 
