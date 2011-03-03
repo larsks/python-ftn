@@ -5,6 +5,7 @@
 
 from fidonet.bitparser import *
 from fidonet.message import Message
+from fidonet.formats import attributeword
 
 MessageParser = Struct('message',
             Field('msgVersion', 'uintle:16', default=2),
@@ -12,7 +13,7 @@ MessageParser = Struct('message',
             Field('destNode', 'uintle:16'),
             Field('origNet', 'uintle:16'),
             Field('destNet', 'uintle:16'),
-            BitStream('attributeWord', 16),
+            attributeword.AttributeWordParser,
             Field('cost', 'uintle:16'),
             PaddedString('dateTime', 20, '\x00'),
             CString('toUsername'),
@@ -20,6 +21,6 @@ MessageParser = Struct('message',
             CString('subject'),
             CString('body', default=''),
 
-            factory=Message,
+            factory = Message
             )
 

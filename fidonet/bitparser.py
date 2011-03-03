@@ -8,6 +8,8 @@ The syntax was inspired by the abandoned construct_ module.
 
 import sys
 import logging
+import traceback
+
 import bitstring
 
 from ftnerror import *
@@ -48,24 +50,24 @@ class Container(dict):
             else:
                 raise
 
-    def build(self):
+    def pack(self):
         '''Return the binary representation of this object as a
         BitStream.'''
-        return self.__struct__.build(self)
+        return self.__struct__.pack(self)
 
     def write(self, fd):
         '''Write the binary representation of this object to a file.'''
         return self.__struct__.write(self, fd)
 
-    def __parse__ (self):
-        '''This method is called by Struct.parse() after processing all of
+    def __unpack__ (self):
+        '''This method is called by Struct.unpack() after processing all of
         the field defintions.  This allows a wrapper object to extract data
         that otherwise cannot be parsed by the low-level parser.'''
 
         pass
 
-    def __build__ (self):
-        '''This method is called by Struct.build() immediately before
+    def __pack__ (self):
+        '''This method is called by Struct.pack() immediately before
         processing all the field definitions.  This allows a wrapper object
         to encode data that otherwse cannot be encoded by the low-level
         parser.'''
@@ -127,6 +129,8 @@ class Struct (object):
 
         '''
 
+        self.name = name
+        self.spec = 'struct:%s' % name
         self._fields = {}
         self._fieldlist = []
 
@@ -139,7 +143,7 @@ class Struct (object):
             self._fieldlist.append(f)
             self._fields[f.name] = f
 
-    def parse(self, bits):
+    def unpack(self, bits):
         '''Parse a binary stream into a structured format.'''
 
         data = self._factory(self)
@@ -147,34 +151,40 @@ class Struct (object):
 
         try:
             for f in self._fieldlist:
+                print 'UNPACK:', f.name, f.spec
                 data[f.name] = f.unpack(bits)
         except bitstring.errors.ReadError:
             raise EndOfData
 
-        if hasattr(data, '__parse__'):
-            data.__parse__()
+        print 'CHECKING:', data.__class__, 'for __unpack__'
+        if hasattr(data, '__unpack__'):
+            data.__unpack__()
 
+        print 'RETURNING', data.__class__
+        print traceback.format_list(extract_stack(2))
         return data
 
-    def parse_fd(self, fd):
+    def unpack_fd(self, fd):
         '''Parse binary data from an open file into a structured format.'''
 
         bits = bitstring.BitStream(fd)
-        return self.parse(bits)
+        return self.unpack(bits)
 
-    def parse_bytes(self, bytes):
+    def unpack_bytes(self, bytes):
         '''Parse a sequence of bytes into a structued format.'''
 
         bits = bitstring.BitStream(bytes=bytes)
-        return self.parse(bits)
+        return self.unpack(bits)
 
-    def build(self, data):
-        '''Transform a structured format into a binrary representation.'''
+    def pack(self, data):
+        '''Transform a structured format into a binary representation.'''
 
         bits = bitstring.BitStream()
 
-        if hasattr(data, '__build__'):
-            data.__build__()
+        print 'DATA:', data.__class__
+        if hasattr(data, '__pack__'):
+            print 'CALL PACK'
+            data.__pack__()
 
         for f in self._fieldlist:
             logging.debug('packing field %s as "%s"' % (f.name, f.spec))
@@ -189,7 +199,7 @@ class Struct (object):
         '''Write the binary representation of a structured format to an
         open file.'''
 
-        fd.write(self.build(data).bytes)
+        fd.write(self.pack(data).bytes)
 
     def create(self):
         '''Return an empty Container instance corresponding to this
@@ -293,6 +303,7 @@ class Constant(Field):
     def unpack(self, bits):
         '''Advance the bit position but ignore the read bits and return a
         constant value.'''
+        super(Constant, self).unpack(bits)
         return self.val
 
     def pack(self, val):
@@ -306,4 +317,39 @@ class Boolean(Field):
 
     def pack(self, val):
         return super(Boolean, self).pack(bool(val))
+
+class Repeat(Field):
+    '''Continuously read a field until we fail.'''
+
+    def __init__(self, name, field):
+        super(Repeat, self).__init__(name, 'field')
+        self.field = field
+
+    def pack(self, val):
+        bits = bitstring.BitStream()
+        for data in val:
+            if hasattr(data, '__pack__'):
+                data.__pack__()
+            bits.append(self.field.pack(data))
+        return bits
+
+    def unpack(self, bits):
+        datavec = []
+
+        while True:
+            print 'LOOP'
+            try:
+                pos = bits.pos
+                data = self.field.unpack(bits)
+                if hasattr(data, '__unpack__'):
+                    data.__unpack__()
+                datavec.append(data)
+            except EndOfData:
+                # if we run out of data while trying to parse the next
+                # repeat, we rewind the bitstream and return to the
+                # containing structure.
+                bits.pos = pos
+                break
+
+        return datavec
 

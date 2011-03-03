@@ -7,6 +7,7 @@ format.
 
 from fidonet.bitparser import *
 from fidonet.packet import Packet
+from fidonet.formats import packedmessage
 
 PacketParser = Struct('packet',
             Field('origNode', 'uintle:16'),
@@ -27,9 +28,7 @@ PacketParser = Struct('packet',
             Field('origZone', 'uintle:16'),
             Field('destZone', 'uintle:16'),
             Field('fill', 'bytes:20'),
-            BitStream('messages'),
+            Repeat('messages', packedmessage.MessageParser),
             Constant('eop', 'bytes:2', '\x00\x00'),
-
-            factory=Packet
             )
 

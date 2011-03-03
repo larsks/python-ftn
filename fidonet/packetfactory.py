@@ -14,7 +14,7 @@ def PacketFactory(src):
     else:
         raise InvalidPacket()
 
-    pkt = fsc0048packet.PacketParser.parse(bits)
+    pkt = fsc0048packet.PacketParser.unpack(bits)
 
     # Heuristics from FSC-0048:
     # http://www.ftsc.org/docs/fsc-0048.002
@@ -28,7 +28,7 @@ def PacketFactory(src):
         logging.debug('capWord check indicates this '
                 'is an fts-0001 packet.')
         bits.pos = 0
-        pkt = fts0001packet.PacketParser.parse(bits)
+        pkt = fts0001packet.PacketParser.unpack(bits)
 
     return pkt
 

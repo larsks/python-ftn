@@ -80,7 +80,7 @@ class Message (Container):
 
         return '\n'.join(text)
 
-    def __build__ (self):
+    def __pack__ (self):
         # unilaterally prefer point addressing in message metadata.
         # and always embed point addressing in message body
         # control lines.
@@ -89,17 +89,21 @@ class Message (Container):
         if self.get('destPoint', 0) > 0:
             self.body.klines['TOPT'] = [self.destPoint]
 
+        print 'BODY:', self.body.__class__
+        print 'SELF:', self.__class__
+
         # Add INTL control line using origin and destination.
         self.body.klines['INTL'] = ['%s %s' % (
             self.destAddr.pointless,
             self.origAddr.pointless)]
 
-        self['attributeWord'] = self['attributeWord'].build()
-        self['body'] = self['body'].build()
+        self['body'] = self['body'].pack()
 
-    def __parse__ (self):
-        self['body'] = MessageBodyParser.parse(self['body'])
-        self['attributeWord'] = attributeword.AttributeWordParser.parse(self['attributeWord'])
+    def __unpack__ (self):
+        print 'Message.__unpack__'
+        print 'TO:', self.toUsername
+        print 'FROM:', self.fromUsername
+        self['body'] = MessageBodyParser.unpack(self['body'])
 
         logging.debug('parsing a message')
 
@@ -131,9 +135,11 @@ class Message (Container):
             else:
                 self['destPoint'] = 0
 
+        print 'FINISHED Message.__unpack__'
+
 class MessageBody (Container):
     def __str__(self):
-        return self.build()\
+        return self.pack()\
                 .replace('\r', '\n')\
                 .replace('\x01', '[K]')
 
@@ -155,12 +161,14 @@ class _MessageBodyParser (object):
 
         return body
 
-    def parse(self, raw):
+    def unpack(self, raw):
+        print 'MessageBodyParser.__unpack__'
         msg = self.create()
 
         state = 0
         text = []
 
+        print 'RAW:', raw.__class__
         for line in raw.split('\r'):
             if state == 0:
                 state = 1
@@ -191,7 +199,7 @@ class _MessageBodyParser (object):
 
         return msg
 
-    def build(self, msg):
+    def pack(self, msg):
         lines = []
 
         if msg['area']:
