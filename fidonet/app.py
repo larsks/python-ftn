@@ -79,7 +79,6 @@ class App (object):
         defaults = {
                 'nodelist': os.path.join(self.opts.data_dir, 'nl.d',
                     'nodelist'),
-                'routes': os.path.join(self.opts.config_dir, 'route.cfg')
                 }
 
         return defaults
