@@ -29,15 +29,16 @@ class App(fidonet.app.App):
             self.opts.routes = self.get_cfg_path('fidonet', 'routes')
 
         if not self.opts.nodelist:
-            self.opts.nodelist = '%s.idx' % self.get_data_paths(
+            nodelist = self.get_data_paths(
                     'fidonet', 'nodelist').next()
+            if not nodelist:
+                sys.log.error('unable to locate a nodelist index')
+                sys.exit(1)
+            self.opts.nodelist = '%s.idx' % nodelist
 
-        if not self.opts.nodelist:
-            sys.log.error('unable to locate a nodelist index')
-            sys.exit(1)
         if not os.path.isfile(self.opts.nodelist):
             self.log.error('nodelist index "%s" is unavailable.' %
-                    self.opts.routes)
+                    self.opts.nodelist)
             sys.exit(1)
         if not os.path.isdir(self.opts.dir):
             self.log.error('binkd outbound directory "%s" is unavailable.'
