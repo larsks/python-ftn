@@ -74,7 +74,7 @@ class App(fidonet.app.AppUsingFiles):
         if self.opts.name:
             if '%' in self.opts.name or '*' in self.opts.name:
                 nodes = nodes.filter(
-                        Node.name.like(self.opts.name).replace('*', '%'))
+                        Node.name.like(self.opts.name.replace('*', '%')))
             else:
                 nodes = nodes.filter(Node.name == self.opts.name)
 
