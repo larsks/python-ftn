@@ -20,43 +20,30 @@ class App(fidonet.app.App):
 
     def handle_args (self, args):
         if not self.opts.origin:
-            try:
-                self.opts.origin = self.cfg.get('fidonet', 'address')
-            except:
-                self.log.error('unable to determine origin address.')
-                sys.exit(1)
+            self.opts.origin = self.get('fidonet', 'address')
 
         if not self.opts.dir:
-            try:
-                self.opts.dir = self.cfg.get('binkd', 'outbound')
-            except:
-                self.log.error('failed to determine binkd outbound directory.')
-                sys.exit(1)
+            self.opts.dir = self.get_data_path('binkd', 'outbound')
 
         if not self.opts.routes:
-            try:
-                self.opts.routes = self.cfg.get('fidonet', 'routes')
-            except:
-                self.log.error('unable to determine routing policy file.')
-                sys.exit(1)
+            self.opts.routes = self.get_cfg_path('fidonet', 'routes')
 
         if not self.opts.nodelist:
-            try:
-                self.opts.nodelist = '%s.idx' % self.cfg.get('fidonet',
-                        'nodelist').split()[0]
-            except:
-                self.log.error('unable to determine nodelist path.')
-                sys.exit(1)
+            self.opts.nodelist = '%s.idx' % self.get_data_paths(
+                    'fidonet', 'nodelist').next()
 
-        if not os.path.isdir(self.opts.dir):
-            self.log.error('binkd outbound directory "%s" is unavailable.'
-                    % self.opts.dir)
+        if not self.opts.nodelist:
+            sys.log.error('unable to locate a nodelist index')
             sys.exit(1)
         if not os.path.isfile(self.opts.nodelist):
             self.log.error('nodelist index "%s" is unavailable.' %
                     self.opts.routes)
             sys.exit(1)
-        if not os.path.isfile(self.opts.routes):
+        if not os.path.isdir(self.opts.dir):
+            self.log.error('binkd outbound directory "%s" is unavailable.'
+                    % self.opts.dir)
+            sys.exit(1)
+        if self.opts.routes is not None and not os.path.isfile(self.opts.routes):
             self.log.error('routing policy file "%s" is unavailable.' %
                     self.opts.routes)
             sys.exit(1)
@@ -91,6 +78,7 @@ class App(fidonet.app.App):
         self.log.debug('processing message to %s' % msg.destAddr)
 
         route = self.router[msg.destAddr]
+        self.log.debug('got route = %s' % str(route))
         dest = route[0]
 
         if not dest.ftn in self.packets:
