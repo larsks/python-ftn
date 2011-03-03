@@ -124,7 +124,9 @@ class App (object):
             return default
 
     def relpath(self, path, dir):
-        if path.startswith('/'):
+        if path is None:
+            return None
+        elif path.startswith('/'):
             return path
         else:
             return os.path.join(dir, path)
