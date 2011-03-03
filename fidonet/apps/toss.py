@@ -29,8 +29,8 @@ class App(fidonet.app.App):
             self.opts.routes = self.get_cfg_path('fidonet', 'routes')
 
         if not self.opts.nodelist:
-            nodelist = self.get_data_paths(
-                    'fidonet', 'nodelist').next()
+            nodelist = list(self.get_data_paths(
+                    'fidonet', 'nodelist'))[0]
             if not nodelist:
                 sys.log.error('unable to locate a nodelist index')
                 sys.exit(1)
@@ -83,10 +83,17 @@ class App(fidonet.app.App):
         dest = route[0]
 
         if not dest.ftn in self.packets:
-            self.log.info('creating new packet for %s' % dest)
-            newpkt = fsc0048packet.PacketParser.create()
-            newpkt.destAddr = dest
-            newpkt.origAddr = fidonet.Address(self.opts.origin)
+            pktfile = os.path.join(self.opts.dir, '%s.out' % dest.hex)
+
+            if os.path.exists(pktfile):
+                self.log.info('found existing packet for %s' % dest)
+                newpkt = fidonet.PacketFactory(open(pktfile))
+            else:
+                self.log.info('creating new packet for %s' % dest)
+                newpkt = fsc0048packet.PacketParser.create()
+                newpkt.destAddr = dest
+                newpkt.origAddr = fidonet.Address(self.opts.origin)
+
             self.packets[dest.ftn] = newpkt
 
         self.log.info('packing message from %s to %s via %s.' % (msg.origAddr,
