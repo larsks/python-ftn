@@ -34,6 +34,7 @@ setup(name = 'python-ftn',
                 'ftn-querypkt = fidonet.apps.querypkt:App.run',
 
                 'ftn-indexnl = fidonet.apps.indexnl:App.run',
+                'ftn-querynl = fidonet.apps.querynl:App.run',
                 'ftn-route = fidonet.apps.route:App.run',
                 'ftn-poll = fidonet.apps.poll:App.run',
                 ],
