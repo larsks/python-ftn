@@ -17,14 +17,18 @@ class App (fidonet.app.App):
 
     def handle_args(self, args):
         if self.opts.nodelist is None:
-            self.opts.nodelist = '%s.idx' % self.get_data_paths(
-                    'fidonet', 'nodelist').next()
+            nodelist = list(self.get_data_paths(
+                    'fidonet', 'nodelist'))[0]
+            if not nodelits:
+                self.log.error('unable to locate a nodelist index')
+                sys.exit(1)
+
+            self.opts.nodelist = '%s.idx' % nodelist
         if self.opts.routes is None:
             self.opts.routes = self.get_cfg_path(
                     'fidonet', 'routes')
 
         self.log.info('using nodelist %s' % self.opts.nodelist)
-
         if self.opts.routes:
             self.log.info('using routes from %s' % self.opts.routes)
 
