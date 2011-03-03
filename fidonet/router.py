@@ -128,12 +128,14 @@ class Router (object):
 
     def __init__ (self,
             nodelist,
-            route_file='route.cfg',
+            route_file=None,
             default='no-route'):
         self.nodelist = nodelist
         self.routes = []
         self.default = self.parse_one_line('%s *' % default)
-        self.read_route_file(route_file)
+
+        if route_file is not None:
+            self.read_route_file(route_file)
 
     def parse_one_line(self, line):
         cmd, args = line.split(None, 1)
@@ -168,6 +170,9 @@ class Router (object):
 
     def lookup_route(self, addr, node=None):
         route = self.default
+
+        logging.debug('finding route for %s (default = %s)' % (addr,
+            route))
 
         for rspec in self.routes:
             logging.debug('check %s against %s' % (addr, rspec))
