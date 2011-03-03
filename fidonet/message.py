@@ -101,26 +101,35 @@ class Message (Container):
         self['body'] = MessageBodyParser.parse(self['body'])
         self['attributeWord'] = attributeword.AttributeWordParser.parse(self['attributeWord'])
 
-        if not 'origPoint' in self:
-            if 'FMPT' in self.body.klines:
-                self['origPoint'] = self.body.klines['FMPT'][0]
-            else:
-                self['origPoint'] = 0
-        if not 'destPoint' in self:
-            if 'TOPT' in self.body.klines:
-                self['destPoint'] = self.body.klines['TOPT'][0]
-            else:
-                self['destPoint'] = 0
-
-        if not 'origZone' in self:
-            self['origZone'] = 0
-        if not 'destZone' in self:
-            self['destZone'] = 0
+        logging.debug('parsing a message')
 
         if 'INTL' in self.body.klines:
             intlDest, intlOrig = self.body.klines['INTL'][0].split()
             self.destAddr = fidonet.Address(intlDest)
             self.origAddr = fidonet.Address(intlOrig)
+
+        # Make sure we have origZone/destZone keys, because we need these
+        # for a diskmessage (and for various sorts of address manipulation)
+        if not 'origZone' in self:
+            self['origZone'] = 0
+        if not 'destZone' in self:
+            self['destZone'] = 0
+
+        # Extract point information from control lines.
+        if self.get('origPoint', 0) == 0:
+            logging.debug('looking for FMPT')
+            if 'FMPT' in self.body.klines:
+                self['origPoint'] = self.body.klines['FMPT'][0]
+                logging.debug('set origPoint = %(origPoint)s' % self)
+            else:
+                self['origPoint'] = 0
+        if self.get('destPoint', 0) == 0:
+            logging.debug('looking for TOPT')
+            if 'TOPT' in self.body.klines:
+                self['destPoint'] = self.body.klines['TOPT'][0]
+                logging.debug('set destPoint = %(destPoint)s' % self)
+            else:
+                self['destPoint'] = 0
 
 class MessageBody (Container):
     def __str__(self):
