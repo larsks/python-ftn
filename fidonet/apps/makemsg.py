@@ -75,7 +75,7 @@ class App (fidonet.app.AppUsingAddresses, fidonet.app.AppUsingNames):
         msg.attributeWord = attr
 
         if self.opts.area:
-            msg.body.area = self.opts.area
+            msg.parsed_body.area = self.opts.area
 
         # Generate an origin line if this is an echomail post.
         if not self.opts.originline and self.opts.area:
@@ -87,21 +87,21 @@ class App (fidonet.app.AppUsingAddresses, fidonet.app.AppUsingNames):
                 pass
 
         if self.opts.originline:
-            msg.body.origin = self.opts.originline
+            msg.parsed_body.origin = self.opts.originline
 
-        msg.body.klines['PID:'] = ['python-ftn']
-        msg.body.klines['MSGID:'] = [ '%(origAddr)s ' % msg + '%08x' % self.next_message_id() ]
+        msg.parsed_body.klines['PID:'] = ['python-ftn']
+        msg.parsed_body.klines['MSGID:'] = [ '%(origAddr)s ' % msg + '%08x' % self.next_message_id() ]
 
         for k in self.opts.kludge:
             k_name, k_val = k.split(' ', 1)
-            msg.body.klines[k_name] = msg.body.klines.get(k_name, []) + [k_val]
+            msg.parsed_body.klines[k_name] = msg.parsed_body.klines.get(k_name, []) + [k_val]
 
         if args:
             sys.stdin = open(args[0])
         if self.opts.output:
             sys.stdout = open(self.opts.output, 'w')
 
-        msg.body.text = sys.stdin.read()
+        msg.parsed_body.text = sys.stdin.read()
 
         msg.write(sys.stdout)
 

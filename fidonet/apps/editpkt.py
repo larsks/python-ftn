@@ -42,9 +42,9 @@ class App (fidonet.app.AppUsingAddresses):
         if name == '<stdin>':
             pkt.write(sys.stdout)
         else:
-            fd.seek(0)
-            pkt.write(fd)
-            fd.close()
+            src.seek(0)
+            pkt.write(src)
+            src.close()
 
         self.log.info('wrote edits to %s' % name)
 

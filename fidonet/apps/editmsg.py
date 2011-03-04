@@ -35,7 +35,7 @@ class App (fidonet.app.AppUsingFiles,
         msg = fidonet.MessageFactory(src)
 
         if self.opts.to_name:
-            self.log.debug('setting to = %s' % self.opts.toname)
+            self.log.debug('setting to = %s' % self.opts.to_name)
             msg.toUsername = self.opts.to_name
         if self.opts.from_name:
             self.log.debug('setting from = %s' % self.opts.from_name)

@@ -212,7 +212,7 @@ class Router (object):
         hub = session.query(Node)\
                 .filter(Node.zone==addr.zone)\
                 .filter(Node.net==addr.net)\
-                .filter(Node.kw=='Hub').first()
+                .filter(Node.kw=='hub').first()
         host = session.query(Node)\
                 .filter(Node.zone==addr.zone)\
                 .filter(Node.net==addr.net)\

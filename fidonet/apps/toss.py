@@ -13,7 +13,7 @@ class App(fidonet.app.App):
     def create_parser(self):
         p = super(App, self).create_parser()
         p.add_option('-o', '--origin', '--orig')
-        p.add_option('-d', '--dir')
+        p.add_option('-D', '--dir')
         p.add_option('-r', '--routes')
         p.add_option('-n', '--nodelist')
         return p
@@ -98,7 +98,7 @@ class App(fidonet.app.App):
 
         self.log.info('packing message from %s to %s via %s.' % (msg.origAddr,
             msg.destAddr, dest))
-        self.packets[dest.ftn].messages.append(packedmessage.MessageParser.build(msg))
+        self.packets[dest.ftn].messages.append(msg)
 
 if __name__ == '__main__':
     App.run()

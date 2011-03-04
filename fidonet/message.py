@@ -61,6 +61,10 @@ class Message (Container):
     origAddr = ftn_address_property('orig')
     destAddr = ftn_address_property('dest')
 
+    def __init__ (self, *args, **kwargs):
+        super(Message, self).__init__(*args, **kwargs)
+        self['parsed_body'] = MessageBodyParser.create()
+
     def __str__ (self):
         text = [
                 'From: %(fromUsername)s @ %(origAddr)s' % self,
@@ -75,7 +79,7 @@ class Message (Container):
 
         text.append(' '.join(flags))
 
-        if self.body.area:
+        if self.parsed_body.area:
             text.append('Area: %(area)s' % self.body)
 
         return '\n'.join(text)
@@ -85,24 +89,24 @@ class Message (Container):
         # and always embed point addressing in message body
         # control lines.
         if self.get('origPoint', 0) > 0:
-            self.body.klines['FMPT'] = [self.origPoint]
+            self.parsed_body.klines['FMPT'] = [self.origPoint]
         if self.get('destPoint', 0) > 0:
-            self.body.klines['TOPT'] = [self.destPoint]
+            self.parsed_body.klines['TOPT'] = [self.destPoint]
 
         # Add INTL control line using origin and destination.
-        self.body.klines['INTL'] = ['%s %s' % (
+        self.parsed_body.klines['INTL'] = ['%s %s' % (
             self.destAddr.pointless,
             self.origAddr.pointless)]
 
-        self['body'] = self['body'].pack()
+        self['body'] = self.parsed_body.pack()
 
     def __unpack__ (self):
-        self['body'] = MessageBodyParser.unpack(self['body'])
-
         logging.debug('parsing a message')
 
-        if 'INTL' in self.body.klines:
-            intlDest, intlOrig = self.body.klines['INTL'][0].split()
+        self['parsed_body'] = MessageBodyParser.unpack(self['body'])
+
+        if 'INTL' in self.parsed_body.klines:
+            intlDest, intlOrig = self.parsed_body.klines['INTL'][0].split()
             self.destAddr = fidonet.Address(intlDest)
             self.origAddr = fidonet.Address(intlOrig)
 
@@ -116,15 +120,15 @@ class Message (Container):
         # Extract point information from control lines.
         if self.get('origPoint', 0) == 0:
             logging.debug('looking for FMPT')
-            if 'FMPT' in self.body.klines:
-                self['origPoint'] = self.body.klines['FMPT'][0]
+            if 'FMPT' in self.parsed_body.klines:
+                self['origPoint'] = self.parsed_body.klines['FMPT'][0]
                 logging.debug('set origPoint = %(origPoint)s' % self)
             else:
                 self['origPoint'] = 0
         if self.get('destPoint', 0) == 0:
             logging.debug('looking for TOPT')
-            if 'TOPT' in self.body.klines:
-                self['destPoint'] = self.body.klines['TOPT'][0]
+            if 'TOPT' in self.parsed_body.klines:
+                self['destPoint'] = self.parsed_body.klines['TOPT'][0]
                 logging.debug('set destPoint = %(destPoint)s' % self)
             else:
                 self['destPoint'] = 0
@@ -146,6 +150,7 @@ class _MessageBodyParser (object):
             'origin': None,
             'klines': odict.odict(),
             'seenby': [],
+            'text': '',
             'body': '',
             })
 

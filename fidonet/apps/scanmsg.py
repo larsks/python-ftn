@@ -26,9 +26,9 @@ class App (fidonet.app.App):
         if self.opts.show_text:
             if self.opts.debug:
                 import pprint
-                pprint.pprint(msg.body)
+                pprint.pprint(msg.parsed_body)
             else:
-                print msg.body
+                print msg.parsed_body
             print
 
 if __name__ == '__main__':

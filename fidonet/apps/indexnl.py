@@ -14,10 +14,10 @@ class App(fidonet.app.AppUsingFiles):
         nodelists = []
 
         if self.opts.output is None:
-            nl_base_path = self.cfg.get('fidonet', 'nodelist').split()[0]
+            nl_base_path = list(self.get_data_paths('fidonet', 'nodelist'))[0]
             self.opts.output = '%s.idx' % nl_base_path
 
-        for nl_base_path in self.cfg.get('fidonet', 'nodelist').split():
+        for nl_base_path in self.get_data_paths('fidonet', 'nodelist'):
             if os.path.exists(nl_base_path):
                 nodelists.append(nl_base_path)
                 self.log.debug('added nodelist %s' % nl_base_path)

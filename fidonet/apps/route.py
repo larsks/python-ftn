@@ -19,7 +19,7 @@ class App (fidonet.app.App):
         if self.opts.nodelist is None:
             nodelist = list(self.get_data_paths(
                     'fidonet', 'nodelist'))[0]
-            if not nodelits:
+            if not nodelist:
                 self.log.error('unable to locate a nodelist index')
                 sys.exit(1)
 

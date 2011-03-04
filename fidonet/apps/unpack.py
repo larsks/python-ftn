@@ -33,27 +33,21 @@ class App(fidonet.app.App):
         for pktfile in args:
             pkt = fidonet.PacketFactory(open(pktfile))
 
-            count = 0
-            while True:
-                try:
-                    msg = fidonet.MessageFactory(pkt.messages)
-                    msgfile = next_message(self.opts.output_directory)
-                    fd = open(msgfile, 'w')
+            for count, msg in enumerate(pkt.messages):
+                msgfile = next_message(self.opts.output_directory)
+                fd = open(msgfile, 'w')
 
-                    if self.opts.packed:
-                        packedmessage.MessageParser.write(msg,fd)
-                    else:
-                        diskmessage.MessageParser.write(msg, fd)
-                    fd.close()
-                    self.log.debug('wrote message from %s to %s' % (
-                        pktfile, msgfile))
-                    count += 1
-                except fidonet.EndOfData:
-                    break
+                if self.opts.packed:
+                    packedmessage.MessageParser.write(msg,fd)
+                else:
+                    diskmessage.MessageParser.write(msg, fd)
+                fd.close()
+                self.log.debug('wrote message from %s to %s' % (
+                    pktfile, msgfile))
 
             self.log.info('Unpacked %d messages from %s into %s.' % (
-                    count, pktfile, self.opts.output_directory))
-            gtotal += count
+                    count+1, pktfile, self.opts.output_directory))
+            gtotal += count+1
 
         self.log.info('Unpacked %d messages total.' % gtotal)
 

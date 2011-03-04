@@ -321,7 +321,7 @@ class Repeat(Field):
     '''Continuously read a field until we fail.'''
 
     def __init__(self, name, field):
-        super(Repeat, self).__init__(name, 'field', default=[])
+        super(Repeat, self).__init__(name, 'field', default=list)
         self.field = field
 
     def pack(self, val):

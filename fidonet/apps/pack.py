@@ -62,7 +62,7 @@ class App(fidonet.app.AppUsingFiles, fidonet.app.AppUsingAddresses):
         pkt = ctx
 
         msg = MessageFactory(src)
-        pkt.messages.append(packedmessage.MessageParser.build(msg))
+        pkt.messages.append(msg)
         self.msgcount += 1
         self.log.info('packed message from %s @ %s to %s @ %s' %
                 (msg.fromUsername, msg.origAddr, msg.toUsername,
