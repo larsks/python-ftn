@@ -8,7 +8,7 @@ from fidonet.message import Message
 from fidonet.formats import attributeword
 
 MessageParser = Struct('message',
-            Field('msgVersion', 'uintle:16', default=2),
+            Constant('msgVersion', 'uintle:16', 2),
             Field('origNode', 'uintle:16'),
             Field('destNode', 'uintle:16'),
             Field('origNet', 'uintle:16'),
@@ -21,6 +21,6 @@ MessageParser = Struct('message',
             CString('subject'),
             CString('body', default=''),
 
-            factory = Message
+            factory=Message,
             )
 

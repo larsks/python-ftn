@@ -26,5 +26,7 @@ MessageParser = Struct('message',
         attributeword.AttributeWordParser,
         Field('nextReply', 'uintle:16'),
         CString('body', default=''),
+
+        factory=Message
         )
 
