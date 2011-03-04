@@ -97,7 +97,7 @@ class Packet (Container):
 
         return '\n'.join(text)
 
-    def __build__ (self):
+    def __pack__ (self):
         if 'capWord' in self:
             self['capWordValidationCopy'] = self['capWord']
 
