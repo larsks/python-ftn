@@ -249,12 +249,9 @@ class CString(Field):
         self.spec = 'bytes, 0x00'
 
     def unpack(self, bits):
-        cur = bits.pos
-        nul = bits[cur:].find('0x00', bytealigned=True)[0]
-        v = bits[cur:cur+nul].tobytes()
-        bits.pos = cur + nul + 8
-
-        return v
+        v = bits[bits.pos:bits.find('0x00', bits.pos, bytealigned=True)[0]]
+        bits.pos += 8
+        return v.tobytes()
 
 def _streammaker(length):
     def _():
@@ -303,8 +300,10 @@ class Constant(Field):
     def unpack(self, bits):
         '''Advance the bit position but ignore the read bits and return a
         constant value.'''
-        super(Constant, self).unpack(bits)
-        return self.val
+        val = super(Constant, self).unpack(bits)
+        if val != self.val:
+            raise ValueError('Constant value %s != %s' % (val, self.val))
+        return val
 
     def pack(self, val):
         return super(Constant, self).pack(self.val)
