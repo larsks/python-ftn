@@ -15,15 +15,15 @@ def MessageFactory(src):
         raise InvalidMessage()
 
     mark = bits.pos
-    msg = packedmessage.MessageParser.unpack(bits)
-    if msg.msgVersion != 2:
-        logging.debug('msgVersion != 2; assuming this '
+
+    try:
+        msg = packedmessage.MessageParser.unpack(bits)
+        logging.debug('this is an FTS-0001 (C) message.')
+    except ValueError:
+        logging.debug('not a packed message; assuming this '
                 'is an FTS-0001 (B) message.')
         bits.pos = mark
         msg = diskmessage.MessageParser.unpack(bits)
-    else:
-        logging.debug('msgVersion == 2; assuming this '
-                'is an FTS-0001 (C) message.')
 
     return msg
 
