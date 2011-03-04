@@ -21,6 +21,11 @@ Python-ftn supports FTS-0001 "on disk" and "packed" messages (and can
 convert between them), and supports both FTS-0001 ("type 2") and
 FSC-0048 ("type 2+") packets.
 
+For current source, bug tracking, and more, visit the `python-ftn project
+page`_ at https://github.com/larsks/python-ftn.
+
+.. _python-ftn project page: https://github.com/larsks/python-ftn
+
 Downloads
 =========
 
@@ -32,7 +37,7 @@ You can clone the git_ repository by running::
 
   git clone git://github.com/larsks/python-ftn.git
 
-.. _git: http://git-scm.com/
+.. _git: https://github.com/larsks/python-ftn
 
 Documentation
 =============
