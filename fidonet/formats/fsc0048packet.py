@@ -19,7 +19,7 @@ PacketParser = Struct('packet',
             Field('minute', 'uintle:16'),
             Field('second', 'uintle:16'),
             Field('baud', 'uintle:16'),
-            Field('pktVersion', 'uintle:16', default=2),
+            Constant('pktVersion', 'uintle:16', 2),
             Field('origNet', 'uintle:16'),
             Field('destNet', 'uintle:16'),
             Field('productCodeLow', 'uintle:8', default=0xFE),
@@ -40,7 +40,7 @@ PacketParser = Struct('packet',
             Repeat('messages', packedmessage.MessageParser),
             Constant('eop', 'bytes:2', '\x00\x00'),
 
-            factory = Packet
+            factory=Packet,
             )
 
 if __name__ == '__main__':
