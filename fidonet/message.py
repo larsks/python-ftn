@@ -80,7 +80,7 @@ class Message (Container):
         text.append(' '.join(flags))
 
         if self.parsed_body.area:
-            text.append('Area: %(area)s' % self.body)
+            text.append('Area: %(area)s' % self.parsed_body)
 
         return '\n'.join(text)
 
@@ -94,9 +94,11 @@ class Message (Container):
             self.parsed_body.klines['TOPT'] = [self.destPoint]
 
         # Add INTL control line using origin and destination.
-        self.parsed_body.klines['INTL'] = ['%s %s' % (
-            self.destAddr.pointless,
-            self.origAddr.pointless)]
+        # (NOT for echomail)
+        if self.parsed_body.area is None:
+            self.parsed_body.klines['INTL'] = ['%s %s' % (
+                self.destAddr.pointless,
+                self.origAddr.pointless)]
 
         self['body'] = self.parsed_body.pack()
 
