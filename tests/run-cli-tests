@@ -1,0 +1,90 @@
+#!/bin/sh
+
+makemsg() {
+echo 'This is a test of python-ftn' |
+ftn-makemsg \
+	-o $1 -d $2 \
+	-f 'Person One' -t 'Person Two' \
+	-s 'This is a test message'
+}
+
+banner() {
+	echo ======================================================================
+	echo "$@"
+	echo ======================================================================
+}
+
+set -e
+
+trap 'rm -rf $workdir' 0
+workdir=$(mktemp -d $(pwd)/testXXXXXX)
+
+banner Generating config
+cat > $workdir/ftn.cfg <<EOF
+[fidonet]
+address = 1:322/761
+nodelist = nodelist
+routes = routes.cfg
+EOF
+
+cat > $workdir/routes.cfg <<EOF
+hub-route *
+no-route @IBN:*
+route-to 1:322/759 1:*
+EOF
+
+cat > $workdir/nodelist.000 <<EOF
+Zone,1,North_America,Windsor_NY,Janis_Kracht,1-607-655-5652,9600,CM,XX,H16,V32b,V42b,V34,V32T,X2C,INA:filegate.net,IBN,IBN:24555,IFT,ITN
+Host,322,Mass_Net_Central,Worcester_MA,Roger_Shays,1-774-253-7138,300,CM,XA,INA:thezoneb.dyndns.org,IBN
+,761,Somebbs,BOSTON_MA,Lars_Kellogg-stedman,000-0-0-0-0,300,INA:somebbs.oddbit.com,IBN
+Zone,99,Test_Zone,Your_Computer,Lars_Kellogg_Stedman,000-0-0-0-0,300,CM
+Host,990,Test_Net,Your_Computer,Lars_Kellogg_Stedman,000-0-0-0-0,300,CM
+Hub,1,Test_Hub,Your_Computer,Lars_Kellogg_Stedman,000-0-0-0-0,300,CM
+,2,Test_Host_2,Your_Computer,Lars_Kellogg_Stedman,000-0-0-0-0,300,CM
+,3,Test_Host_3,Your_Computer,Lars_Kellogg_Stedman,000-0-0-0-0,300,CM,IBN
+EOF
+
+export FTN_CONFIG_DIR=$workdir
+export FTN_DATA_DIR=$workdir
+
+banner Generating nodelist index
+ftn-indexnl -v --debug
+sqlite3 $workdir/nodelist.idx 'select * from nodes'
+
+banner Generating messages
+makemsg 1:322/761 99:99/99 > $workdir/1.msg
+makemsg 1:322/761 99:990/1 > $workdir/2.msg
+makemsg 1:322/761 99:990/2 > $workdir/3.msg
+makemsg 1:322/761 99:990/3 > $workdir/4.msg
+makemsg 1:322/761 1:322/759 > $workdir/5.msg
+makemsg 1:322/761 1:100/100 > $workdir/6.msg
+
+banner Scanning messages
+ftn-scanmsg -t $workdir/*.msg
+
+banner Tossing
+ftn-toss -D $workdir -v $workdir/*.msg
+
+banner Scanning packets
+ftn-scanpkt -m $workdir/*.out
+
+banner Before edit message
+ftn-scanmsg $workdir/1.msg
+
+ftn-editmsg -g killSent -g private \
+	-d 2:2/2 -t 'A. New Person' -s 'Edit Test' $workdir/1.msg
+
+banner After edit message
+ftn-scanmsg $workdir/1.msg
+
+ls -ltr $workdir
+banner Before edit packet
+(cd $workdir && ftn-scanpkt 00630000.out)
+
+ftn-editpkt -d 1:1/1 $workdir/00630000.out
+
+banner After edit packet
+(cd $workdir && ftn-scanpkt 00630000.out)
+
+echo "Destination is:" $(ftn-querypkt -q destAddr $workdir/00630000.out)
+
