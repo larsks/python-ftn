@@ -320,8 +320,6 @@ class Repeat(Field):
     def pack(self, val):
         bits = bitstring.BitStream()
         for data in val:
-            if hasattr(data, '__pack__'):
-                data.__pack__()
             bits.append(self.field.pack(data))
         return bits
 
@@ -332,10 +330,8 @@ class Repeat(Field):
             try:
                 pos = bits.pos
                 data = self.field.unpack(bits)
-                if hasattr(data, '__unpack__'):
-                    data.__unpack__()
                 datavec.append(data)
-            except EndOfData:
+            except (ValueError, EndOfData):
                 # if we run out of data while trying to parse the next
                 # repeat, we rewind the bitstream and return to the
                 # containing structure.
