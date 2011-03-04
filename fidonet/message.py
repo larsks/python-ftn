@@ -190,7 +190,6 @@ class _MessageBodyParser (object):
         return msg
 
     def pack(self, msg):
-        STACK()
         lines = []
 
         if msg['area']:
