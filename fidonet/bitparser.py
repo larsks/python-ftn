@@ -8,7 +8,6 @@ The syntax was inspired by the abandoned construct_ module.
 
 import sys
 import logging
-import traceback
 
 import bitstring
 
@@ -151,17 +150,13 @@ class Struct (object):
 
         try:
             for f in self._fieldlist:
-                print 'UNPACK:', f.name, f.spec
                 data[f.name] = f.unpack(bits)
         except bitstring.errors.ReadError:
             raise EndOfData
 
-        print 'CHECKING:', data.__class__, 'for __unpack__'
         if hasattr(data, '__unpack__'):
             data.__unpack__()
 
-        print 'RETURNING', data.__class__
-        print traceback.format_list(extract_stack(2))
         return data
 
     def unpack_fd(self, fd):
@@ -181,9 +176,7 @@ class Struct (object):
 
         bits = bitstring.BitStream()
 
-        print 'DATA:', data.__class__
         if hasattr(data, '__pack__'):
-            print 'CALL PACK'
             data.__pack__()
 
         for f in self._fieldlist:
@@ -336,7 +329,6 @@ class Repeat(Field):
         datavec = []
 
         while True:
-            print 'LOOP'
             try:
                 pos = bits.pos
                 data = self.field.unpack(bits)
