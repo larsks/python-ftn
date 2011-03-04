@@ -184,7 +184,10 @@ class Struct (object):
             try:
                 bits.append(f.pack(data[f.name]))
             except KeyError:
-                bits.append(f.pack(f.default))
+                try:
+                    bits.append(f.pack(f.default))
+                except AttributeError:
+                    raise KeyError(f.name)
 
         return bits
 
@@ -201,15 +204,19 @@ class Struct (object):
         data = self._factory(self)
 
         for f in self._fieldlist:
-            if callable(f.default):
-                data[f.name] = f.default()
-            else:
-                data[f.name] = f.default
+            if hasattr(f, 'default'):
+                if callable(f.default):
+                    data[f.name] = f.default()
+                else:
+                    data[f.name] = f.default
 
         if hasattr(data, '__parse__'):
             data.__parse__()
 
         return data
+
+    def default(self):
+        return self.create()
 
 class Field (object):
     '''Represents a field in a binary structure.'''
@@ -314,7 +321,7 @@ class Repeat(Field):
     '''Continuously read a field until we fail.'''
 
     def __init__(self, name, field):
-        super(Repeat, self).__init__(name, 'field')
+        super(Repeat, self).__init__(name, 'field', default=[])
         self.field = field
 
     def pack(self, val):
