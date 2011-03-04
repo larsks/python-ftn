@@ -29,21 +29,14 @@ class App (fidonet.app.App):
         print
 
         if self.opts.show_messages:
-            count = 0
-            while True:
-                try:
-                    msg = fidonet.MessageFactory(pkt.messages)
-                    print '[%03d]' % count
-                    print msg
+            for i, msg in enumerate(pkt.messages):
+                print '[%03d]' % i
+                print msg
+                print
+
+                if self.opts.show_message_text:
+                    print msg.body
                     print
-
-                    if self.opts.show_message_text:
-                        print msg.body
-                        print
-
-                    count += 1
-                except fidonet.EndOfData:
-                    break
 
 if __name__ == '__main__':
     App.run()
