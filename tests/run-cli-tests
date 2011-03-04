@@ -64,6 +64,8 @@ ftn-scanmsg -t $workdir/*.msg
 
 banner Tossing
 ftn-toss -D $workdir -v $workdir/*.msg
+makemsg 1:322/761 99:99/88 > $workdir/7.msg
+ftn-toss -D $workdir -v $workdir/7.msg
 
 banner Scanning packets
 ftn-scanpkt -m $workdir/*.out
