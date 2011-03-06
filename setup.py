@@ -37,6 +37,8 @@ setup(name = 'python-ftn',
                 'ftn-querynl = fidonet.apps.querynl:App.run',
                 'ftn-route = fidonet.apps.route:App.run',
                 'ftn-poll = fidonet.apps.poll:App.run',
+
+                'ftn-hatch = fidonet.apps.hatch:App.run',
                 ],
             },
         install_requires = [
