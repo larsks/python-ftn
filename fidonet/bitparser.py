@@ -152,7 +152,8 @@ class Struct (object):
             for f in self._fieldlist:
                 data[f.name] = f.unpack(bits)
         except bitstring.errors.ReadError:
-            raise EndOfData
+            if not f.missingok:
+                raise EndOfData
 
         if hasattr(data, '__unpack__'):
             data.__unpack__()
@@ -221,11 +222,12 @@ class Struct (object):
 class Field (object):
     '''Represents a field in a binary structure.'''
 
-    def __init__ (self, name, spec=None, default=0):
+    def __init__ (self, name, spec=None, default=0, missingok=False):
 
         self.name = name
         self.spec = spec
         self.default = default
+        self.missingok = missingok
 
     def unpack(self, bits):
         return self.__unpack(bits)
@@ -263,20 +265,20 @@ class BitStream(Field):
     bytes in the stream, otherwise this is a bit field of the given
     length.'''
 
-    def __init__(self, name, length=None):
+    def __init__(self, name, length=None, **kw):
         if length:
             spec = 'bits:%d' % length
         else:
             spec = 'bits'
         super(BitStream, self).__init__(name, spec,
-                default=_streammaker(length))
+                default=_streammaker(length), **kw)
 
 class PaddedString(Field):
     '''A fixed-width string filled with a padding character.'''
 
     def __init__(self, name, length=0, padchar=' ', **kw):
         super(PaddedString, self).__init__(name, 'bytes:%d' % length,
-                default=padchar * length)
+                default=padchar * length, **kw)
         self.length = length
         self.padchar = padchar
 
@@ -293,8 +295,8 @@ class PaddedString(Field):
 class Constant(Field):
     '''A constant field.'''
 
-    def __init__(self, name, spec, val):
-        super(Constant, self).__init__(name, spec, val)
+    def __init__(self, name, spec, val, **kw):
+        super(Constant, self).__init__(name, spec, val, **kw)
         self.val = val
 
     def unpack(self, bits):
@@ -311,8 +313,8 @@ class Constant(Field):
 class Boolean(Field):
     '''A boolean value.'''
 
-    def __init__(self, name, default=False):
-        super(Boolean, self).__init__(name, 'bool', default)
+    def __init__(self, name, default=False, **kw):
+        super(Boolean, self).__init__(name, 'bool', default=default, **kw)
 
     def pack(self, val):
         return super(Boolean, self).pack(bool(val))
@@ -320,8 +322,8 @@ class Boolean(Field):
 class Repeat(Field):
     '''Continuously read a field until we fail.'''
 
-    def __init__(self, name, field):
-        super(Repeat, self).__init__(name, 'field', default=list)
+    def __init__(self, name, field, **kw):
+        super(Repeat, self).__init__(name, 'field', default=list, **kw)
         self.field = field
 
     def pack(self, val):

@@ -38,7 +38,7 @@ PacketParser = Struct('packet',
             Field('destPoint', 'uintle:16'),
             Field('productData', 'uintle:32'),
             Repeat('messages', packedmessage.MessageParser),
-            Constant('eop', 'bytes:2', '\x00\x00'),
+            Constant('eop', 'bytes:2', '\x00\x00', missingok=True),
 
             factory=Packet,
             )
