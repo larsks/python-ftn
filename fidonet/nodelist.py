@@ -55,6 +55,7 @@ class Node(Base):
 
     address = Column(String, index=True, unique=True)
 
+    hub_id = Column(Integer, ForeignKey('nodes.id'))
     flags = relationship(Flag, backref='node')
 
     def __repr__ (self):

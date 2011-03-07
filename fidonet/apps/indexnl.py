@@ -3,6 +3,8 @@ import tempfile
 import glob
 import errno
 
+from sqlalchemy.sql import and_, or_, not_
+
 import fidonet
 import fidonet.app
 from fidonet.nodelist import Nodelist, Node
@@ -57,6 +59,8 @@ class App(fidonet.app.AppUsingFiles):
 
     def index_one_nodelist(self, session, nodelist):
         addr = fidonet.Address()
+        hubs = []
+        host = None
 
         self.log.info('indexing %s' % nodelist)
 
@@ -70,7 +74,22 @@ class App(fidonet.app.AppUsingFiles):
             if node.node is None:
                 continue
 
+            if node.kw == 'hub':
+                hubs.append(node)
+
             session.add(node)
+
+        self.log.debug('committing changes')
+        session.commit()
+
+        self.log.debug('updating hub information')
+        for hub in hubs:
+            session.execute(
+                Node.__table__.update(and_(
+                    Node.net == hub.net,
+                    Node.node != hub.node,
+                    Node.node !=0),
+                    dict(hub_id=hub.id)))
 
         self.log.debug('committing changes')
         session.commit()
