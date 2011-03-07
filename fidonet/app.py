@@ -133,7 +133,7 @@ class App (object):
 
     def get_cfg_path(self, section, option, default=None):
         try:
-            path = self.cfg.get(section, option)
+            path = self.cfg.get(section, option).split()[0]
             return self.relpath(path, self.opts.config_dir)
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             return default
@@ -144,7 +144,7 @@ class App (object):
 
     def get_data_path(self, section, option, default=None):
         try:
-            path = self.cfg.get(section, option)
+            path = self.cfg.get(section, option).split()[0]
             return self.relpath(path, self.opts.data_dir)
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             return default
