@@ -25,6 +25,7 @@ class Router (object):
                                | 'DIRECT'
                                | 'HUB-ROUTE'
                                | 'HOST-ROUTE'
+                               | 'ZONE-ROUTE'
 
       <targeted-route-command> ::= 'ROUTE-TO'
 
@@ -59,6 +60,11 @@ class Router (object):
 
     Route packets to a network hub, if available, otherwise behaves like
     ``HOST-ROUTE``.
+
+    ZONE-ROUTE
+    ----------
+
+    Route packets to the zonegate for the given address.
 
     NO-ROUTE
     --------
@@ -168,6 +174,9 @@ class Router (object):
     def cmd_host_route(self, args):
         return (('host-route',), args)
 
+    def cmd_zone_route(self, args):
+        return (('zone-route',), args)
+
     def lookup_route(self, addr, node=None):
         route = self.default
 
@@ -193,6 +202,7 @@ class Router (object):
 
     def route(self, addr):
         addr = fidonet.Address(addr)
+        host = fidonet.Address(addr, node=0)
         session = self.nodelist.broker()
         
         node = session.query(Node).filter(Node.address==addr.ftn).first()
@@ -209,34 +219,34 @@ class Router (object):
             # ...or for route-to, either.
             return (fidonet.Address(rspec[1]), rspec)
 
+        # We could make this more efficient using the hub_id field
+        # in the index, but then it wouldn't work for unknown nodes.
         hub = session.query(Node)\
                 .filter(Node.zone==addr.zone)\
                 .filter(Node.net==addr.net)\
                 .filter(Node.kw=='hub').first()
-        host = session.query(Node)\
-                .filter(Node.zone==addr.zone)\
-                .filter(Node.net==addr.net)\
-                .filter(Node.node=='0').first()
 
-        logging.debug('found hub = %s' % hub)
-        logging.debug('found host = %s' % host)
+        logging.debug('hub for %s = %s' % (addr, hub))
+        logging.debug('host for %s = %s' % (addr, host))
 
         if action == 'no-route':
             if node is None or node.kw in ['pvt', 'hold']:
                 if hub:
                     return (fidonet.Address(hub.address), rspec)
-                elif host:
-                    return (fidonet.Address(host.address), rspec)
+                else:
+                    return (host, rspec)
             else:
                 return (fidonet.Address(node.address), rspec)
         elif action == 'hub-route':
             if hub:
                 return (fidonet.Address(hub.address), rspec)
-            elif host:
-                return (fidonet.Address(host.address), rspec)
+            else:
+                return (host, rspec)
         elif action == 'host-route':
-            if host:
-                return (fidonet.Address(host.address), rspec)
+            return (host, rspec)
+        elif action == 'zone-route':
+            zonegate = fidonet.Address(addr, net=addr.zone, node=0)
+            return (zonegate, rspec)
 
         return (None, None)
 
