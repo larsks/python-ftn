@@ -87,10 +87,6 @@ class Address (object):
         self._node = 0
         self._point = 0
 
-        for k,v in kw.items():
-            if k in self.fields:
-                setattr(self, k, v)
-
         if isinstance(addr, Address):
             self._zone = addr.zone
             self._net = addr.net
@@ -98,6 +94,10 @@ class Address (object):
             self._point = addr.point
         elif addr is not None:
             self.parse_from_string(addr)
+
+        for k,v in kw.items():
+            if k in self.fields:
+                setattr(self, k, v)
 
     def parse_from_string(self, addr):
             for x in [ re_ftn_addr, re_rfc_addr ]:
