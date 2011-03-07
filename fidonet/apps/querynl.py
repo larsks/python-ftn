@@ -48,7 +48,7 @@ class App(fidonet.app.AppUsingFiles):
 
     def handle_args(self, args):
         if self.opts.nodelist is None:
-            nodelist = self.cfg.get('fidonet', 'nodelist').split()[0]
+            nodelist = self.get_data_path('fidonet', 'nodelist')
             self.opts.nodelist = '%s.idx' % nodelist
 
         nl = Nodelist('sqlite:///%s' % self.opts.nodelist)
