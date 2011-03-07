@@ -35,7 +35,7 @@ class App (fidonet.app.App):
                 print
 
                 if self.opts.show_message_text:
-                    print msg.body
+                    print msg.parsed_body
                     print
 
 if __name__ == '__main__':
