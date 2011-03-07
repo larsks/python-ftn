@@ -98,7 +98,7 @@ class Node(Base):
     def from_nodelist(self, line, addr):
         cols = line.rstrip().split(',')
         if len(cols) < len(fields):
-            logging.debug('skipping invalid line:', line)
+            logging.debug('skipping invalid line: %s', line)
             return
 
         for k,v in (zip(fields, cols[:len(fields)])):
