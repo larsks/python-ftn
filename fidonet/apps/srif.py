@@ -49,6 +49,8 @@ class App (fidonet.app.App):
 
         data = fidonet.srif.SRIF(sys.stdin)
 
+        self.log.info("processing request from %(AKA)s @ %(CallerID)s" % data)
+
         req = open(data['RequestList'])
         rsp = open(data['ResponseList'], 'w')
         rsp.truncate()
