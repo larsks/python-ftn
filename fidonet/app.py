@@ -119,8 +119,9 @@ class App (object):
 
         if self.get('fidonet', 'logfile'):
             self.log.debug('adding file handler')
-            self.log.addHandler(
-                    FileHandler(self.cfg.get('fidonet', 'logfile')))
+            handler = FileHandler(self.cfg.get('fidonet', 'logfile'))
+            handler.setFormatter(logging.root.handlers[0].formatter)
+            self.log.addHandler(handler)
 
     def setup_umask(self):
         try:
