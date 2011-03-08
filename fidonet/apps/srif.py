@@ -87,8 +87,10 @@ class App (fidonet.app.App):
         rsppath = os.path.join(
                 os.path.dirname(data['ResponseList']),
                 reqname)
-        fd = open(rsppath, 'w')
 
+        self.log.debug('putting output of %s in: %s' % (reqname, rsppath))
+
+        fd = open(rsppath, 'w')
         rc = subprocess.call([path, self.opts.basedir], stdout=fd)
 
         if rc != 0:
