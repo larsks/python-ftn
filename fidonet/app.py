@@ -74,7 +74,11 @@ class App (object):
                 action='store_true',
                 help='Dump configuration to stdout.')
         p.add_option('--syslog',
-                help='Log to syslog using the specified facility.')
+                action='store_true',
+                help='Log to syslog.')
+        p.add_option('--syslog-facility', '--facility',
+                default='news',
+                help='Use the specified facility when logging to syslog.')
 
         return p
 
@@ -118,10 +122,10 @@ class App (object):
 
         self.log = logging.getLogger(self.logtag)
 
-        if self.opts.syslog is not None:
+        if self.opts.syslog:
             self.log.debug('adding syslog handler')
             self.log.addHandler(
-                    SysLogHandler('/dev/log', self.opts.syslog))
+                    SysLogHandler('/dev/log', self.opts.syslog_facility))
 
     def setup_umask(self):
         try:

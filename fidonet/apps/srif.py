@@ -70,7 +70,7 @@ class App (fidonet.app.App):
                 reqpath = os.path.join(self.opts.magicdir, line)
                 if self.is_exe_file(reqpath):
                     self.log.info('request for magic file: %s' % line)
-                    tmppath = self.run_magic_file(reqpath)
+                    tmppath = self.run_magic_file(data, line, reqpath)
                     print >>rsp, '-%s' % tmppath
                     continue
 
@@ -83,19 +83,21 @@ class App (fidonet.app.App):
                 self.log.info('request for normal file: %s' % line)
                 print >>rsp, '+%s' % reqpath
 
-    def run_magic_file(self, path):
-        tmpfd, tmpname = tempfile.mkstemp()
-        tmpfd = os.fdopen(tmpfd)
+    def run_magic_file(self, data, reqname, reqpath):
+        rsppath = os.path.join(
+                os.path.dirname(data['ResponseList']),
+                reqname)
+        fd = open(rsppath, 'w')
 
-        rc = subprocess.call([path, self.opts.basedir], stdout=tmpfd)
+        rc = subprocess.call([path, self.opts.basedir], stdout=fd)
 
         if rc != 0:
             self.log.error('request for magic file failed, rc = %d' % rc)
-            tmpfd.seek(0)
-            print >>tmpfd, 'File request failed.'
-            tmpfd.truncate()
+            fd.seek(0)
+            print >>fd, 'File request failed.'
+            fd.truncate()
 
-        return tmpname
+        return rsppath
 
     def is_exe_file(self, path):
         return os.path.isfile(path) and \
