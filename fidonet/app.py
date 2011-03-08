@@ -117,7 +117,7 @@ class App (object):
 
         self.log = logging.getLogger(self.logtag)
 
-        if self.cfg.get('fidonet', 'logfile'):
+        if self.get('fidonet', 'logfile'):
             self.log.debug('adding file handler')
             self.log.addHandler(
                     FileHandler(self.cfg.get('fidonet', 'logfile')))
