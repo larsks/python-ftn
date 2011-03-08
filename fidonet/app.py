@@ -2,6 +2,7 @@ import os
 import sys
 import optparse
 import logging
+from logging.handlers import SysLogHandler
 import ConfigParser
 
 import bitstring
@@ -72,6 +73,8 @@ class App (object):
         p.add_option('--dump-config',
                 action='store_true',
                 help='Dump configuration to stdout.')
+        p.add_option('--syslog',
+                help='Log to syslog using the specified facility.')
 
         return p
 
@@ -114,6 +117,11 @@ class App (object):
             logging.root.setLevel(logging.INFO)
 
         self.log = logging.getLogger(self.logtag)
+
+        if self.opts.syslog is not None:
+            self.log.debug('adding syslog handler')
+            self.log.addHandler(
+                    SysLogHandler('/dev/log', self.opts.syslog))
 
     def setup_umask(self):
         try:
