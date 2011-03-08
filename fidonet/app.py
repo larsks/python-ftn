@@ -2,6 +2,8 @@ import os
 import sys
 import optparse
 import logging
+from logging import FileHandler
+from logging.handlers import SysLogHandler
 import ConfigParser
 
 import bitstring
@@ -25,10 +27,10 @@ class App (object):
         self.opts = opts
         self.parser = parser
 
-        self.defaults = self.set_defaults()
         self.cfg = self.create_config()
-
         self.read_config()
+        self.defaults = self.set_defaults()
+
         self.setup_logging()
         self.setup_umask()
 
@@ -57,7 +59,7 @@ class App (object):
                 default=defaults.ftn_config_dir,
                 help='Find configuration files in this directory.')
         p.add_option('--data-dir',
-                default=defaults.ftn_data_dir,
+                default=None,
                 help='Find data files in this directory.'),
         p.add_option('-v', '--verbose',
                 action='store_true',
@@ -76,15 +78,23 @@ class App (object):
         return p
 
     def set_defaults(self):
-        defaults = {
-                'nodelist': os.path.join(self.opts.data_dir, 'nl.d',
-                    'nodelist'),
-                }
+        '''This is called after processing command line options and reading
+        the config file.  It is responsible for setting up any default
+        values and for adjusting existing config files (e.g., transforming
+        relative paths into absolute paths).'''
 
-        return defaults
+        if not self.opts.data_dir:
+            self.opts.data_dir = self.get('fidonet', 'datadir')
+        if not self.opts.data_dir:
+            self.opts.data_dir = defaults.ftn_data_dir
+
+        if self.opts.data_dir:
+            self.opts.data_dir = os.path.abspath(self.opts.data_dir)
+        if self.opts.config_dir:
+            self.opts.config_dir = os.path.abspath(self.opts.config_dir)
 
     def create_config(self):
-        cfg = ConfigParser.ConfigParser(self.defaults)
+        cfg = ConfigParser.ConfigParser()
         return cfg
 
     def read_config(self):
@@ -106,6 +116,12 @@ class App (object):
             logging.root.setLevel(logging.INFO)
 
         self.log = logging.getLogger(self.logtag)
+
+        if self.get('fidonet', 'logfile'):
+            self.log.debug('adding file handler')
+            handler = FileHandler(self.cfg.get('fidonet', 'logfile'))
+            handler.setFormatter(logging.root.handlers[0].formatter)
+            self.log.addHandler(handler)
 
     def setup_umask(self):
         try:
