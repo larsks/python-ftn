@@ -50,7 +50,7 @@ class App (fidonet.app.App):
         data = fidonet.srif.SRIF(sys.stdin)
 
         req = open(data['RequestList'])
-        rsp = open(data['ResponseList'], 'r+')
+        rsp = open(data['ResponseList'], 'w')
         rsp.truncate()
 
         for line in (x.strip() for x in req):
