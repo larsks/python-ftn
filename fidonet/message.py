@@ -155,7 +155,6 @@ class _MessageBodyParser (object):
     def create(self):
         body = MessageBody(self, {
             'area': None,
-            'origin': None,
             'klines': odict.odict(),
             'seenby': [],
             'text': '',
@@ -183,12 +182,12 @@ class _MessageBodyParser (object):
             if state == 1:
                 if line.startswith('\x01'):
                     self.addKludge(msg, line)
-                elif line.startswith(' * Origin:'):
-                    msg['origin'] = line[11:]
+                elif line.startswith('SEEN-BY:'):
                     state = 2
                 else:
                     text.append(line)
-            elif state == 2:
+
+            if state == 2:
                 if line.startswith('\x01'):
                     self.addKludge(msg, line)
                 elif line.startswith('SEEN-BY:'):
@@ -213,9 +212,6 @@ class _MessageBodyParser (object):
                 lines.append('%s%s %s' % (self.kludgePrefix, k,v))
 
         lines.extend(msg['text'].split('\n'))
-
-        if msg['origin']:
-            lines.append(' * Origin: %s' % msg['origin'])
 
         for seenby in msg['seenby']:
             lines.append('SEEN-BY: %s' % seenby)
