@@ -5,6 +5,7 @@ __all__ = [
         'packedmessage',
         'diskmessage',
         'fts0001packet',
+        'fsc0045packet',
         'fsc0048packet',
         'attributeword',
         ]

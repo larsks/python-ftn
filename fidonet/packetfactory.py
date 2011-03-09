@@ -14,10 +14,17 @@ def PacketFactory(src):
     else:
         raise InvalidPacket()
 
+    try:
+        pkt = fsc0045packet.PacketParser.unpack(bits)
+        return pkt
+    except ValueError:
+        bits.pos = 0
+
+    # If we weren't able to parse it as a type 2.2 packet, we'll
+    # use the heuristics from FSC-0048 to decide between type 2
+    # and type 2+.
     pkt = fsc0048packet.PacketParser.unpack(bits)
 
-    # Heuristics from FSC-0048:
-    # http://www.ftsc.org/docs/fsc-0048.002
     if pkt.pktVersion != 2:
         logging.error('pktVersion != 2')
         raise InvalidPacket()
