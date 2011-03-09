@@ -141,6 +141,12 @@ class MessageBody (Container):
                 .replace('\r', '\n')\
                 .replace('\x01', '[K]')
 
+    def add_kludge(self, k, v):
+        if k in self.klines:
+            self.klines[k].append(v)
+        else:
+            self.klines[k] = [v]
+
 # Everything below this is an ungodly mess.  Why, Fidonet, why!?
 
 class _MessageBodyParser (object):

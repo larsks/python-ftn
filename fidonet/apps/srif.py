@@ -93,7 +93,9 @@ class App (fidonet.app.App):
         self.log.debug('putting output of %s in: %s' % (reqname, rsppath))
 
         fd = open(rsppath, 'w')
-        rc = subprocess.call([reqpath, self.opts.basedir], stdout=fd)
+        rc = subprocess.call([reqpath, self.opts.basedir],
+                stdout=fd,
+                env=data)
 
         if rc != 0:
             self.log.error('request for magic file failed, rc = %d' % rc)
