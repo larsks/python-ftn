@@ -48,6 +48,8 @@ class App (fidonet.app.App):
             sys.stdin = open(args.pop(0))
 
         data = fidonet.srif.SRIF(sys.stdin)
+        if not 'CallerID' in data:
+            data['CallerID'] = 'unknown'
 
         self.log.info("processing request from %(AKA)s @ %(CallerID)s" % data)
 
@@ -93,9 +95,11 @@ class App (fidonet.app.App):
         self.log.debug('putting output of %s in: %s' % (reqname, rsppath))
 
         fd = open(rsppath, 'w')
+        env = dict([('SRIF_%s' % k, v) for k,v in data.items()])
+        env.update(os.environ)
         rc = subprocess.call([reqpath, self.opts.basedir],
                 stdout=fd,
-                env=data)
+                env=env)
 
         if rc != 0:
             self.log.error('request for magic file failed, rc = %d' % rc)
