@@ -39,7 +39,7 @@ setup(name = 'python-ftn',
                 'ftn-poll = fidonet.apps.poll:App.run',
 
                 'ftn-hatch = fidonet.apps.hatch:App.run',
-                'ftn-process-req = fidonet.apps.srif:App.run',
+                'ftn-srif = fidonet.apps.srif:App.run',
                 'ftn-pftransport = fidonet.apps.pftransport:App.run',
                 ],
             },
