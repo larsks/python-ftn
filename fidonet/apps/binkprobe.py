@@ -3,6 +3,7 @@ import sys
 import bitstring
 import socket
 import cPickle as pickle
+import time
 
 import fidonet.app
 from fidonet.nodelist import Nodelist, Node, Flag
@@ -17,6 +18,8 @@ class App (fidonet.app.App):
         p.add_option('-p', '--port',
                 default='24554')
         p.add_option('-O', '--output', '--out')
+        p.add_option('-i', '--interval',
+                default='1')
         return p
 
     def handle_args(self, args):
@@ -24,6 +27,10 @@ class App (fidonet.app.App):
             nodelist = self.get_data_path('fidonet', 'nodelist')
             self.opts.nodelist = '%s.idx' % nodelist
 
+        self.opts.port = int(self.opts.port)
+        self.opts.interval = int(self.opts.interval)
+
+        self.log.debug('using nodelist = %s' % self.opts.nodelist)
         nl = Nodelist('sqlite:///%s' % self.opts.nodelist)
         nl.setup()
         session = nl.broker()
@@ -41,6 +48,7 @@ class App (fidonet.app.App):
         for n in nodes:
             d = self.connect(n)
             results.append(d)
+            time.sleep(self.opts.interval)
 
         if self.opts.output:
             pickle.dump(results, open(self.opts.output, 'w'))
@@ -49,27 +57,31 @@ class App (fidonet.app.App):
             pprint.pprint(results)
 
     def connect(self, node):
-        data = {'__address__': node.address}
-
-        inet = node.inet('IBN')
-        if not inet:
-            data['__failed__'] = 'no address'
-            return data
-
-        if ':' in inet:
-            addr, port = inet.split(':')
-        else:
-            addr, port = inet, self.opts.port
-
-        srvraddr = socket.gethostbyname(addr)
-        s = socket.socket()
-        s.settimeout(float(self.opts.timeout))
+        self.log.info('probing node %s' % node.address)
+        seq = 0
+        ndinfo = {'__address__': node.address}
 
         try:
+            inet = node.inet('IBN')
+            if not inet:
+                self.log.info('%s: unable to determine address for binkp support' %
+                        node.address)
+                ndinfo['__failed__'] = 'no address'
+                return ndinfo
+
+            if ':' in inet:
+                addr, port = inet.split(':')
+            else:
+                addr, port = inet, self.opts.port
+
+            srvraddr = socket.gethostbyname(addr)
+            s = socket.socket()
+            s.settimeout(float(self.opts.timeout))
+
             s.connect((srvraddr, int(port)))
 
             while True:
-                bytes = s.recv(2)
+                bytes = s.recv(1) + s.recv(1)
                 bits = bitstring.BitStream(bytes=bytes)
 
                 cmd = bits.read('bool')
@@ -80,15 +92,34 @@ class App (fidonet.app.App):
                 if cmd:
                     cmdid = bits.read('uint:8')
                     if cmdid == 0:
-                        k, v = bits.read('bytes').split(None, 1)
-                        data[k] = v
+                        data = bits.read('bytes')
+                        try:
+                            k,v = data.split(None, 1)
+                        except ValueError:
+                            k = 'unknown_%d' % seq
+                            v = data
+                            seq += 1
+                        ndinfo[k] = v
                     else:
                         break
             s.close()
-            return data
         except socket.timeout:
-            data['__failed__'] = 'timeout'
-            return data
+            self.log.error('%s: connection timed out' % node.address)
+            ndinfo['__failed__'] = 'timeout'
+        except socket.gaierror, detail:
+            self.log.error('%s: hostname lookup failed: %s' % (node.address,
+                detail))
+            ndinfo['__failed__'] = str(detail)
+        except socket.error, detail:
+            self.log.error('%s: connection failed: %s' % (node.address,
+                detail))
+            ndinfo['__failed__'] = str(detail)
+        except Exception, detail:
+            self.log.error('%s: an unknown error occurred: %s' %
+                    (node.address, detail))
+            ndinfo['__failed__'] = str(detail)
+
+        return ndinfo
 
 if __name__ == '__main__':
     App.run()
