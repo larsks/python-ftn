@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
 re_ip_in_phone = re.compile('000*-(\d+-\d+-\d+-\d+)')
-re_hostname = re.compile('\w+\.\w+\.\w+')
+re_hostname = re.compile('\w+\.\w+')
 
 fields = (
         'kw',
@@ -70,27 +70,38 @@ class Node(Base):
         first.'''
 
         ip = None
+        port = None
 
         for flag in self.flags:
             if flag.flag_name == for_flag and flag.flag_val is not None:
-                ip = flag.flag_val
-                break
+                if '.' in flag.flag_val:
+                    if ':' in flag.flag_val:
+                        ip, port = flag.flag_val.split(':')
+                    else:
+                        ip = flag.flag_val
+                    break
+                else:
+                    port = flag.flag_val
             elif flag.flag_name == 'IP':
                 ip = flag.flag_val
             elif flag.flag_name == 'INA':
                 ip = flag.flag_val
 
-        if ip is not None:
-            return ip
+        if ip is None:
+            # Is this FTSC?
+            mo = re_ip_in_phone.match(self.phone)
+            if mo:
+                ip = mo.group(1).replace('-', '.')
+            else:
+                mo = re_hostname.match(self.name)
+                if mo:
+                    ip = self.name
 
-        # Is this FTSC?
-        mo = re_ip_in_phone.match(self.phone)
-        if mo:
-            return mo.group(1).replace('-', '.')
+        if ip is not None and ':' in ip:
+            ip = ip.split(':')[0]
 
-        mo = re_hostname.match(self.name)
-        if mo:
-            return self.name
+        if ip:
+            return port and '%s:%s' % (ip, port) or ip
 
     def to_nodelist(self):
         return ','.join([str(getattr(self, x)) for x in fields])
