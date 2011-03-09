@@ -86,7 +86,7 @@ class BinkpConnection (object):
 
 if __name__ == '__main__':
 
-    b = BinkpConnection((sys.argv[1],), timeout=10)
+    b = BinkpConnection(sys.argv[1].split(':'), timeout=10)
     b.connect()
 
     b.send_cmd_frame('M_PWD', '-')
