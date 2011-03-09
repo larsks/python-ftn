@@ -8,6 +8,9 @@ import time
 import fidonet.app
 from fidonet.nodelist import Nodelist, Node, Flag
 
+class ConnectionFailed (Exception):
+    pass
+
 class App (fidonet.app.App):
 
     def create_parser(self):
@@ -17,7 +20,6 @@ class App (fidonet.app.App):
                 default='10')
         p.add_option('-p', '--port',
                 default='24554')
-        p.add_option('-O', '--output', '--out')
         p.add_option('-i', '--interval',
                 default='1')
         return p
@@ -26,6 +28,11 @@ class App (fidonet.app.App):
         if self.opts.nodelist is None:
             nodelist = self.get_data_path('fidonet', 'nodelist')
             self.opts.nodelist = '%s.idx' % nodelist
+
+        results = {}
+        output = args.pop(0)
+        if os.path.exists(output):
+            results = pickle.load(open(output))
 
         self.opts.port = int(self.opts.port)
         self.opts.interval = int(self.opts.interval)
@@ -44,65 +51,56 @@ class App (fidonet.app.App):
             nodes = session.query(Node).join('flags').filter(
                     Flag.flag_name == 'IBN')
 
-        results = []
         for n in nodes:
-            d = self.connect(n)
-            results.append(d)
+            if n.address in results:
+                self.log.info('%s: skipped: previously seen' % n.address)
+                continue
+
+            d = self.probe(n)
+            results[d['__ftnaddress__']] = d
+            pickle.dump(results, open(output, 'w'))
             time.sleep(self.opts.interval)
 
-        if self.opts.output:
-            pickle.dump(results, open(self.opts.output, 'w'))
-        else:
-            import pprint
-            pprint.pprint(results)
+        pickle.dump(results, open(output, 'w'))
 
-    def connect(self, node):
+    def connect(self, node, ndinfo):
+        inet = node.inet('IBN')
+
+        if not inet:
+            raise ConnectionFailed('no internet address in nodelist' %
+                    node.address)
+
+        if ':' in inet:
+            addr, port = inet.split(':')
+        else:
+            addr, port = inet, self.opts.port
+
+        srvraddr = socket.gethostbyname(addr)
+
+        ndinfo['__inet__'] = inet
+        ndinfo['__inetaddr__'] = srvraddr
+
+        s = socket.socket()
+        s.settimeout(float(self.opts.timeout))
+        s.connect((srvraddr, int(port)))
+
+        return s
+
+    def probe(self, node):
         self.log.info('probing node %s' % node.address)
         seq = 0
-        ndinfo = {'__address__': node.address}
+        ndinfo = {'__ftnaddress__': node.address,
+                '__checked__': time.time()}
 
         try:
-            inet = node.inet('IBN')
-            if not inet:
-                self.log.info('%s: unable to determine address for binkp support' %
-                        node.address)
-                ndinfo['__failed__'] = 'no address'
-                return ndinfo
+            s = self.connect(node, ndinfo)
+            self.read_binkp_info(s, node, ndinfo)
 
-            if ':' in inet:
-                addr, port = inet.split(':')
-            else:
-                addr, port = inet, self.opts.port
-
-            srvraddr = socket.gethostbyname(addr)
-            s = socket.socket()
-            s.settimeout(float(self.opts.timeout))
-
-            s.connect((srvraddr, int(port)))
-
-            while True:
-                bytes = s.recv(1) + s.recv(1)
-                bits = bitstring.BitStream(bytes=bytes)
-
-                cmd = bits.read('bool')
-                len = bits.read('uint:15')
-
-                bits = bitstring.BitStream(bytes=s.recv(len))
-
-                if cmd:
-                    cmdid = bits.read('uint:8')
-                    if cmdid == 0:
-                        data = bits.read('bytes')
-                        try:
-                            k,v = data.split(None, 1)
-                        except ValueError:
-                            k = 'unknown_%d' % seq
-                            v = data
-                            seq += 1
-                        ndinfo[k] = v
-                    else:
-                        break
             s.close()
+        except ConnectionFailed, detail:
+            self.log.error('%s: connection failed: %s' % (node.address,
+                detail))
+            ndinfo['__failed__'] = str(detail)
         except socket.timeout:
             self.log.error('%s: connection timed out' % node.address)
             ndinfo['__failed__'] = 'timeout'
@@ -120,6 +118,30 @@ class App (fidonet.app.App):
             ndinfo['__failed__'] = str(detail)
 
         return ndinfo
+
+    def read_binkp_info(self, s, node, ndinfo):
+        while True:
+            bytes = s.recv(1) + s.recv(1)
+            bits = bitstring.BitStream(bytes=bytes)
+
+            cmd = bits.read('bool')
+            len = bits.read('uint:15')
+
+            bits = bitstring.BitStream(bytes=s.recv(len))
+
+            if cmd:
+                cmdid = bits.read('uint:8')
+                if cmdid == 0:
+                    data = bits.read('bytes')
+                    try:
+                        k,v = data.split(None, 1)
+                    except ValueError:
+                        k = 'unknown_%d' % seq
+                        v = data
+                        seq += 1
+                    ndinfo[k] = v
+                else:
+                    break
 
 if __name__ == '__main__':
     App.run()
