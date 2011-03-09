@@ -18,7 +18,9 @@ class App(fidonet.app.App):
 
     def create_parser(self):
         p = super(App, self).create_parser()
-        p.add_option('-d', '--output-directory')
+        p.add_option('-D', '--output-directory',
+                default='.')
+        p.add_option('-m', '--message')
         p.add_option('--disk', action='store_false',
                 dest='packed')
         p.add_option('--packed', action='store_true',
@@ -28,28 +30,34 @@ class App(fidonet.app.App):
         return p
 
     def handle_args(self, args):
-        gtotal = 0
+        if self.opts.message:
+            self.opts.message = [int(x) for x in self.opts.message.split(',')]
 
-        for pktfile in args:
-            pkt = fidonet.PacketFactory(open(pktfile))
+        self.gtotal = 0
+        self.for_each_arg(self.unpack, args)
+        self.log.info('Unpacked %d messages total.' % self.gtotal)
 
-            for count, msg in enumerate(pkt.messages):
-                msgfile = next_message(self.opts.output_directory)
-                fd = open(msgfile, 'w')
+    def unpack(self, src, name, ctx):
+        pkt = fidonet.PacketFactory(src)
 
-                if self.opts.packed:
-                    packedmessage.MessageParser.write(msg,fd)
-                else:
-                    diskmessage.MessageParser.write(msg, fd)
-                fd.close()
-                self.log.debug('wrote message from %s to %s' % (
-                    pktfile, msgfile))
+        for count, msg in enumerate(pkt.messages):
+            if self.opts.message and not count in self.opts.message:
+                continue
 
-            self.log.info('Unpacked %d messages from %s into %s.' % (
-                    count+1, pktfile, self.opts.output_directory))
-            gtotal += count+1
+            msgfile = next_message(self.opts.output_directory)
+            fd = open(msgfile, 'w')
 
-        self.log.info('Unpacked %d messages total.' % gtotal)
+            if self.opts.packed:
+                packedmessage.MessageParser.write(msg,fd)
+            else:
+                diskmessage.MessageParser.write(msg, fd)
+            fd.close()
+            self.log.info('wrote message %d from %s to %s' % (
+                count, name, msgfile))
+
+        self.log.info('Unpacked %d messages from %s into %s.' % (
+                count+1, name, self.opts.output_directory))
+        self.gtotal += count+1
 
 if __name__ == '__main__':
     App.run()
