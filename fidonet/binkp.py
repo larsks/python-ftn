@@ -21,6 +21,9 @@ cmd_names = {
 
 cmd_ids = dict((v,k) for k,v in cmd_names.iteritems())
 
+class ConnectionClosed(Exception):
+    pass
+
 class BinkpConnection (object):
 
     def __init__ (self, addr, timeout=None):
@@ -46,7 +49,10 @@ class BinkpConnection (object):
         bytes = self.sock.recv(want)
 
         while len(bytes) < want:
-            bytes += self.sock.recv(want - len(bytes))
+            more = self.sock.recv(want - len(bytes))
+            if not more:
+                raise ConnectionClosed()
+            bytes += more
 
         return bytes
 

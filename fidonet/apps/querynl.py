@@ -44,6 +44,7 @@ class App(fidonet.app.AppUsingFiles):
         p.add_option('-g', '--flag', action='append', default=[])
         p.add_option('-N', '--name')
         p.add_option('-p', '--sysop')
+        p.add_option('-r', '--raw', action='store_true')
         return p
 
     def handle_args(self, args):
@@ -105,6 +106,8 @@ class App(fidonet.app.AppUsingFiles):
                     else:
                         print flag.flag_name,
                 print
+                if self.opts.raw:
+                    print '%10s: %s' % ('Raw', n.raw[0].entry)
                 print
             else:
                 print '%12s : %s' % (n.address, n.name)
