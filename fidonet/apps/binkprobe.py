@@ -6,11 +6,13 @@ import time
 import struct
 import pprint
 
+from sqlalchemy.orm.exc import *
+
 import fidonet.app
 from fidonet.nodelist import Nodelist, Node, Flag
-from fidonet.binkp import BinkpConnection
+from fidonet.binkp import BinkpConnection, ConnectionClosed
 
-class ConnectionFailed (Exception):
+class NoAddressListed (Exception):
     pass
 
 class App (fidonet.app.App):
@@ -27,159 +29,135 @@ class App (fidonet.app.App):
         p.add_option('-O', '--output', '--out')
         p.add_option('--noincremental', action='store_true')
         p.add_option('-N', '--noload', action='store_true')
-        p.add_option('-I', '--inet', action='store_true')
+        p.add_option('-T', '--retry-failed', action='store_true')
+        p.add_option('--retry-only')
         return p
 
-    def handle_args(self, args):
+    def setup_nodelist (self):
         if self.opts.nodelist is None:
             nodelist = self.get_data_path('fidonet', 'nodelist')
             self.opts.nodelist = '%s.idx' % nodelist
 
-        results = {}
-        if self.opts.output \
-                and not self.opts.noload \
-                and os.path.exists(self.opts.output):
-            results = pickle.load(open(self.opts.output))
-
-        self.opts.port = int(self.opts.port)
-        self.opts.interval = int(self.opts.interval)
-
         self.log.debug('using nodelist = %s' % self.opts.nodelist)
         nl = Nodelist('sqlite:///%s' % self.opts.nodelist)
         nl.setup()
-        session = nl.broker()
+        self.session = nl.broker()
 
+    def setup_results(self):
+        self.results = {}
+
+        if self.opts.output \
+                and not self.opts.noload \
+                and os.path.exists(self.opts.output):
+            self.results = pickle.load(open(self.opts.output))
+
+    def handle_args(self, args):
+        self.opts.port = int(self.opts.port)
+        self.opts.interval = int(self.opts.interval)
+
+        self.setup_nodelist()
+        self.setup_results()
+
+        nodes = []
         if args:
-            nodes = []
             for addr in args:
-                nodes.append(session.query(Node).filter(Node.address ==
-                        addr).one())
+                try:
+                    node = self.session.query(Node).filter(
+                            Node.address == addr).one()
+                    nodes.append(node)
+                except NoResultFound:
+                    self.log.error('%s: skipped: does not exist in nodelist' % addr)
         else:
-            nodes = session.query(Node).join('flags').filter(
-                    Flag.flag_name == 'IBN')
+            nodes = self.session.query(Node).join(
+                    'flags').filter(Flag.flag_name == 'IBN')
 
-        for n in nodes:
-            if n.address in results:
-                self.log.info('%s: skipped: previously seen' % n.address)
-                continue
+        for node in nodes:
+            if node.address in self.results:
+                if not self.opts.retry_failed \
+                        or not '__failed__' in self.results[node.address]:
+                    self.log.info('%s: already probed' % node.address)
+                    continue
 
-            d = self.probe(n)
-            if self.opts.debug:
-                pprint.pprint(d)
+            self.probe(node)
+            if self.results and self.opts.output and not self.opts.noincremental:
+                pickle.dump(self.results, open(self.opts.output, 'w'))
 
-            results[d['__ftnaddress__']] = d
-            if self.opts.output and not self.opts.noincremental:
-                pickle.dump(results, open(self.opts.output, 'w'))
-            time.sleep(self.opts.interval)
-
-        if self.opts.output:
-            pickle.dump(results, open(self.opts.output, 'w'))
+        if self.results and self.opts.output:
+            pickle.dump(self.results, open(self.opts.output, 'w'))
 
     def probe(self, node):
         self.log.info('probing node %s' % node.address)
-        seq = 0
         ndinfo = {'__ftnaddress__': node.address,
                 '__checked__': time.time()}
 
         try:
-            s = self.connect(node, ndinfo)
-            self.read_binkp_info(s, node, ndinfo)
-            s.close()
-        except ConnectionFailed, detail:
-            self.log.error('%s: connection failed: %s' % (node.address,
-                detail))
-            ndinfo['__failed__'] = str(detail)
+            inet = node.inet('IBN')
+            self.log.debug('%s: got address = %s' % (node.address, inet))
+            if inet is None:
+                raise NoAddressListed()
+
+            c = BinkpConnection(inet.split(':'), timeout=self.opts.timeout)
+            c.connect()
+            self.read_binkp_info(c, ndinfo)
+        except ConnectionClosed:
+            self.log.error('%s: remote end closed connection' %
+                    node.address)
+            ndinfo['__failed__'] = 'disconnected'
+        except NoAddressListed:
+            self.log.error('%s: no address listed in nodelist' %
+                    node.address)
+            ndinfo['__failed__'] = 'address'
         except socket.timeout:
             self.log.error('%s: connection timed out' % node.address)
             ndinfo['__failed__'] = 'timeout'
         except socket.gaierror, detail:
             self.log.error('%s: hostname lookup failed: %s' % (node.address,
                 detail))
-            ndinfo['__failed__'] = str(detail)
+            ndinfo['__failed__'] = 'hostname'
         except socket.error, detail:
             self.log.error('%s: connection failed: %s' % (node.address,
                 detail))
-            ndinfo['__failed__'] = str(detail)
+            ndinfo['__failed__'] = 'socket: %s' % str(detail)
         except Exception, detail:
             self.log.error('%s: an unknown error occurred: %s' % (
                 node.address, detail))
-            ndinfo['__failed__'] = str(detail)
+            ndinfo['__failed__'] = 'unknown: %s' % str(detail)
 
             if self.opts.debug:
                 raise
 
-        return ndinfo
+        self.results[ndinfo['__ftnaddress__']] = ndinfo
 
-    def read_bytes(self, s, want):
-        bytes = s.recv(want)
-
-        while len(bytes) < want:
-            print 'want %d, got %d, reading %d' % (
-                    want, len(bytes), (want-len(bytes)))
-            bytes += s.recv(want - len(bytes))
-
-        return bytes
-
-    def read_frame (self, s):
-        bytes = self.read_bytes(s, 2)
-        frame_header = struct.unpack('>H', bytes)[0]
-        cmd_frame = frame_header & 0x8000
-        data_len = frame_header & ~0x8000
-
-        if cmd_frame:
-            cmd_id = struct.unpack('B', s.recv(1))[0]
-            data = self.read_bytes(s, data_len - 1)
-
-            self.log.debug('received command frame, cmd_id = %d, data = %s'
-                    % (cmd_id, data))
-        else:
-            cmd_id = 0
-            data = self.read_bytes(s, data_len)
-            self.log.debug('received data frame, length = %d bytes' %
-                    data_len)
-
-        return { 'command': bool(cmd_frame),
-                'cmd_id': cmd_id,
-                'data': data }
-
-    def send_cmd_frame(self, s, cmd_id, data):
-        data = struct.pack('b', cmd_id) + data
-        data_len = len(data)
-        frame_header = data_len | 0x8000
-
-        s.sendall(struct.pack('>H', frame_header))
-        s.sendall(data)
-
-        self.log.debug('sent command frame, cmd_id = %d, data = %s' %
-                (cmd_id, data))
-
-    def read_binkp_info(self, s, node, ndinfo):
+    def read_binkp_info(self, c, ndinfo):
+        seq = 0
+        c.send_cmd_frame('M_NUL', 'SYS BINKPROBE')
+        c.send_cmd_frame('M_NUL', 'ZYZ binkd statistics robot')
+        c.send_cmd_frame('M_ADR', '0:0/0@fidonet')
         while True:
-            frame = self.read_frame(s)
+            frame = c.read_frame()
 
             if frame['command']:
-                if frame['cmd_id'] == 0:
+                self.log.debug('received command %(cmd_id)s, data = %(data)s' % frame)
+                if frame['cmd_id'] == 'M_NUL':
                     try:
                         k,v = frame['data'].split(None, 1)
                     except ValueError:
                         k = 'unknown_%d' % seq
-                        v = data
+                        v = frame['data']
                         seq += 1
 
                     if k in ndinfo:
                         ndinfo[k] = [ndinfo[k], v]
                     else:
                         ndinfo[k] = v
-                elif frame['cmd_id'] == 1:
+                elif frame['cmd_id'] == 'M_ADR':
                     ndinfo['AKA'] = frame['data'].split()
-
-                    self.send_cmd_frame(s, 2, '-')
-                elif frame['cmd_id'] == 7:
-                    ndinfo['__passreq__'] = True
                     break
                 else:
-                    self.log.debug('exit loop on cmdid = %d' % frame['cmd_id'])
+                    self.log.debug('exit loop on cmdid = %s' % frame['cmd_id'])
                     break
+
+        c.send_cmd_frame('M_EOB')
 
 if __name__ == '__main__':
     App.run()
