@@ -16,12 +16,15 @@ def graph (data, title, key, maxwidth=75):
         if v > max: max = v
 
     for k,v in data.items():
+        if k == '__total__':
+            continue
+
         line = '#' * (int((v * ((w*1.0)/max)))+1)
         if len(line) > len('%d' % v) + 9:
             line = '%s (%d) ##' % ( '#' * (len(line)-9), v)
         else:
             line = '%s (%d)' % (line, v)
-        print '%10s | %s' % (k, line)
+        print '%10s | %s' % (k[:10], line)
 
 data = pickle.load(open(sys.argv[1]))
 
@@ -29,7 +32,9 @@ total = 0
 binkd = 0
 other = 0
 unknown = 0
-failed = 0
+
+failed = 0;
+failed_idx = {}
 
 binkd_idx = {'vers': {},
         'os': {}}
@@ -38,6 +43,8 @@ for k,v in data.items():
     total += 1
     if '__failed__' in v:
         failed += 1
+        reason = v['__failed__'].split(':')[0]
+        failed_idx[reason] = failed_idx.get(reason, 0) + 1
     elif 'VER' in v:
         if v['VER'].startswith('binkd'):
             binkd += 1
@@ -60,8 +67,12 @@ for k,v in data.items():
     else:
         unknown += 1
 
-graph({'binkd': binkd, 'other': other, 'unknown': unknown, 'failed':
-    failed}, 'BinkP capable mailers', 'mailer')
+graph({'failed': failed, 'success': total - failed}, 'Total nodes',
+'status')
+print
+graph(failed_idx, 'Connection Failures', 'reason')
+print
+graph({'binkd': binkd, 'other': other, 'unknown': unknown }, 'BinkP capable mailers', 'mailer')
 print
 graph(binkd_idx['vers'], 'BinkD use by version', 'version')
 print
