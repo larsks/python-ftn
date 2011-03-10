@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
 re_ip_in_phone = re.compile('000*-(\d+-\d+-\d+-\d+)')
+re_phone_all_zero = re.compile('000*-0+-0+-0+-0+')
 re_hostname = re.compile('\w+\.\w+')
 
 fields = (
@@ -33,6 +34,13 @@ class Flag(Base):
     flag_name = Column(String)
     flag_val = Column(String)
 
+class Raw(Base):
+    __tablename__ = 'raw'
+
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('nodes.id'))
+    entry = Column(String)
+
 class Node(Base):
     __tablename__ = 'nodes'
 
@@ -56,7 +64,9 @@ class Node(Base):
     address = Column(String, index=True, unique=True)
 
     hub_id = Column(Integer, ForeignKey('nodes.id'))
+
     flags = relationship(Flag, backref='node')
+    raw = relationship(Raw, backref='node')
 
     def __repr__ (self):
         return '<Node %s (%s)>' % (self.address, self.name)
@@ -90,7 +100,7 @@ class Node(Base):
         if ip is None:
             # Is this FTSC?
             mo = re_ip_in_phone.match(self.phone)
-            if mo:
+            if mo and not re_phone_all_zero.match(self.phone):
                 ip = mo.group(1).replace('-', '.')
             else:
                 mo = re_hostname.match(self.name)
@@ -107,6 +117,8 @@ class Node(Base):
         return ','.join([str(getattr(self, x)) for x in fields])
 
     def from_nodelist(self, line, addr):
+        self.raw.append(Raw(entry=line))
+
         cols = line.rstrip().split(',')
         if len(cols) < len(fields):
             logging.debug('skipping invalid line: %s', line)
