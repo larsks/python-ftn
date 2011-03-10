@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker, relationship, backref
 
 re_ip_in_phone = re.compile('000*-(\d+-\d+-\d+-\d+)')
 re_phone_all_zero = re.compile('000*-0+-0+-0+-0+')
-re_hostname = re.compile('\w+\.\w+')
+re_hostname = re.compile('[\w-]+\.[\w-]+')
 
 fields = (
         'kw',
@@ -77,12 +77,17 @@ class Node(Base):
     def inet(self, for_flag=None):
         '''Attempt to return the IP address or hostname for this
         node.  If you specify for_flag, look for a service specific address
-        first.'''
+        first.  Returns address or address:port if successful; returns None
+        if unable to determine an address from the nodelist.'''
 
         ip = None
         port = None
 
         for flag in self.flags:
+            # If there is an address attache to the requested flag,
+            # prefer it over anything else.  Note that unlike
+            # binkd_nodelister, we stop at the first instance
+            # of the flag right now.
             if flag.flag_name == for_flag and flag.flag_val is not None:
                 if '.' in flag.flag_val:
                     if ':' in flag.flag_val:
@@ -92,22 +97,31 @@ class Node(Base):
                     break
                 else:
                     port = flag.flag_val
-            elif flag.flag_name == 'IP':
-                ip = flag.flag_val
-            elif flag.flag_name == 'INA':
-                ip = flag.flag_val
 
         if ip is None:
-            # Is this FTSC?
+            # If the system name looks like an address, use it.
+            mo = re_hostname.match(self.name)
+            if mo:
+                ip = self.name
+
+        if ip is None:
+            # Use address from IP or INA flags.
+            for flag in self.flags:
+                if flag.flag_name == 'IP' and flag.flag_val:
+                    ip = flag.flag_val
+                elif flag.flag_name == 'INA' and flag.flag_val:
+                    ip = flag.flag_val
+
+        if ip is None:
+            # Extract IP address from phone number field.  This
+            # is apparently a Thing That is Done, but I'm not
+            # sure it's FTSC kosher.
             mo = re_ip_in_phone.match(self.phone)
             if mo and not re_phone_all_zero.match(self.phone):
                 ip = mo.group(1).replace('-', '.')
-            else:
-                mo = re_hostname.match(self.name)
-                if mo:
-                    ip = self.name
 
         if ip is not None and ':' in ip:
+            # Split an ip:port specification.
             ip = ip.split(':')[0]
 
         if ip:
