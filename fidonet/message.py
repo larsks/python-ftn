@@ -141,6 +141,7 @@ class MessageBody (Container):
         self['klines'] = {}
         self['seenby'] = []
         self['area'] = None
+        self['text'] = ''
 
     def __str__(self):
         return self.pack()\
