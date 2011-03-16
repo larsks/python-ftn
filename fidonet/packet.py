@@ -70,6 +70,10 @@ from fidonet.formats import packedmessage
 
 class Packet (Container):
 
+    def __init__(self, *args, **kwargs):
+        super(Packet, self).__init__(*args, **kwargs)
+        self._messages = []
+
     origAddr = ftn_address_property('orig')
     destAddr = ftn_address_property('dest')
 
@@ -98,6 +102,9 @@ class Packet (Container):
 
         return '\n'.join(text)
 
+    def __unpack__ (self):
+        self.__start_messages = self.__bits__.pos
+
     def __pack__ (self):
         if 'capWord' in self:
             self['capWordValidationCopy'] = self['capWord']
@@ -107,13 +114,21 @@ class Packet (Container):
             self['qOrigNet'] = self['origNet']
 
     def messages(self):
+        self.__bits__.pos = self.__start_messages
         while True:
             try:
-                # check for EOP marker
-                if self.__bits__[self.__bits__.pos:].tobytes() == '\x00\x00':
-                    break
                 yield packedmessage.MessageParser.unpack(self.__bits__)
             except EndOfData:
                 break
+            except ValueError:
+                if not self.__bits__[self.__bits__.pos-16:].tobytes() == '\x00\x00':
+                    raise
+        self.__end_messages = self.__bits__.pos
 
+    def write_messages(self, fd, msgs):
+        for msg in msgs:
+            packedmessage.MessageParser.write(msg, fd)
+
+    def write_eop(self, fd):
+        fd.write('\x00\x00')
 
