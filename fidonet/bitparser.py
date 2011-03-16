@@ -202,7 +202,7 @@ class Struct (object):
         '''Return an empty Container instance corresponding to this
         Struct.'''
 
-        data = self._factory(self)
+        data = self._factory(self, None)
 
         for f in self._fieldlist:
             if hasattr(f, 'default'):
