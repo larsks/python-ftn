@@ -32,7 +32,7 @@ class App(fidonet.app.AppUsingFiles, fidonet.app.AppUsingAddresses):
         pkt.destAddr = Address(self.opts.destination)
         pkt.time = time.localtime()
 
-        self.msgcount = 0
+        self.messages = []
         self.for_each_arg(self.pack_msg, args, ctx=pkt)
 
         if self.opts.binkd and not self.opts.destdir:
@@ -56,14 +56,16 @@ class App(fidonet.app.AppUsingFiles, fidonet.app.AppUsingAddresses):
             out = open(outname, 'w')
 
         pkt.write(out)
-        self.log.info('packed %d messages into %s.' % (self.msgcount, outname))
+        pkt.write_messages(out, self.messages)
+        pkt.write_eop(out)
+
+        self.log.info('packed %d messages into %s.' % (len(self.messages), outname))
 
     def pack_msg(self, src, name, ctx=None):
         pkt = ctx
 
         msg = MessageFactory(src)
-        pkt.messages.append(msg)
-        self.msgcount += 1
+        self.messages.append(msg)
         self.log.info('packed message from %s @ %s to %s @ %s' %
                 (msg.fromUsername, msg.origAddr, msg.toUsername,
                     msg.destAddr))

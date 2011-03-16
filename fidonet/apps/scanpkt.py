@@ -29,7 +29,7 @@ class App (fidonet.app.App):
         print
 
         if self.opts.show_messages:
-            for i, msg in enumerate(pkt.messages):
+            for i, msg in enumerate(pkt.messages()):
                 print '[%03d]' % i
                 print msg
                 print
