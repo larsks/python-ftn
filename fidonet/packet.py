@@ -66,6 +66,7 @@ import time
 from ftnerror import *
 from util import *
 from bitparser import Container
+from fidonet.formats import packedmessage
 
 class Packet (Container):
 
@@ -104,4 +105,15 @@ class Packet (Container):
         if 'qOrigNode' in self:
             self['qOrigNode'] = self['origNode']
             self['qOrigNet'] = self['origNet']
+
+    def messages(self):
+        while True:
+            try:
+                # check for EOP marker
+                if self.__bits__[self.__bits__.pos:].tobytes() == '\x00\x00':
+                    break
+                yield packedmessage.MessageParser.unpack(self.__bits__)
+            except EndOfData:
+                break
+
 

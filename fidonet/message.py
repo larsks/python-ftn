@@ -136,6 +136,12 @@ class Message (Container):
                 self['destPoint'] = 0
 
 class MessageBody (Container):
+    def __init__(self, *args, **kwargs):
+        super(MessageBody, self).__init__(*args, **kwargs)
+        self['klines'] = {}
+        self['seenby'] = []
+        self['area'] = None
+
     def __str__(self):
         return self.pack()\
                 .replace('\r', '\n')\
@@ -219,7 +225,11 @@ class _MessageBodyParser (object):
         return '\r'.join(lines)
 
     def addKludge(self, msg, line):
-        k,v = line[1:].split(None, 1)
+        try:
+            k,v = line[1:].split(None, 1)
+        except ValueError:
+            logging.debug('ignoring control line with no value: %s' % line)
+            return
 
         if k in msg['klines']:
             msg['klines'][k].append(v)

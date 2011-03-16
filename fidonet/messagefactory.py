@@ -2,7 +2,7 @@ import logging
 
 import bitstring
 
-from fidonet.formats import *
+from fidonet.formats import packedmessage,diskmessage
 from fidonet.ftnerror import *
 from message import Message, MessageBodyParser
 

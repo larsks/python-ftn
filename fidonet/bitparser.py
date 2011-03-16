@@ -17,9 +17,10 @@ class Container(dict):
     '''The ``Struct`` class returns ``Container`` instances when you call any
     of the ``parse`` methods.'''
 
-    def __init__(self, struct, *args, **kw):
+    def __init__(self, struct, bits, *args, **kw):
         super(Container, self).__init__(*args, **kw)
         self.__struct__ = struct
+        self.__bits__ = bits
 
     def __getattr__ (self, k):
         '''Allow keys to be accessed using dot notation.'''
@@ -145,8 +146,7 @@ class Struct (object):
     def unpack(self, bits):
         '''Parse a binary stream into a structured format.'''
 
-        data = self._factory(self)
-        self.bits = bits
+        data = self._factory(self, bits)
 
         try:
             for f in self._fieldlist:
@@ -251,8 +251,13 @@ class CString(Field):
         self.spec = 'bytes, 0x00'
 
     def unpack(self, bits):
-        v = bits[bits.pos:bits.find('0x00', bits.pos, bytealigned=True)[0]]
-        bits.pos += 8
+        try:
+            v = bits[bits.pos:bits.find('0x00', bits.pos, bytealigned=True)[0]]
+            bits.pos += 8
+        except IndexError:
+            v = bits[bits.pos:]
+            bits.pos = len(bits)
+
         return v.tobytes()
 
 def _streammaker(length):

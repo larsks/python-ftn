@@ -27,14 +27,7 @@ PacketParser = Struct('packet',
             Field('origDomain', 'bytes:8'),
             Field('destDomain', 'bytes:8'),
             Field('productData', 'bytes:4'),
-            Repeat('messages', packedmessage.MessageParser),
-            Constant('eop', 'bytes:2', '\x00\x00', missingok=True),
 
             factory=Packet
             )
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
 
