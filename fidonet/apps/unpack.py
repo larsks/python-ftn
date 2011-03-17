@@ -40,7 +40,7 @@ class App(fidonet.app.App):
     def unpack(self, src, name, ctx):
         pkt = fidonet.PacketFactory(src)
 
-        for count, msg in enumerate(pkt.messages):
+        for count, msg in enumerate(pkt.messages()):
             if self.opts.message and not count in self.opts.message:
                 continue
 
